@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a0c13d03-d627-40e0-970b-5297b3bedf7a",
+  "id": "5f59461b-561b-4e31-9a9c-14222b7b741f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "chat_message": {
@@ -577,7 +577,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'null'"
         },
         "created_at": {
           "name": "created_at",
