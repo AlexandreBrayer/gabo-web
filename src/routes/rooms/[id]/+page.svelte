@@ -10,6 +10,7 @@
 	import RoomActions from '$lib/components/Room/RoomActions.svelte';
 	import PlayerList from '$lib/components/Room/PlayerList.svelte';
 	import ChatPanel from '$lib/components/Chat/ChatPanel.svelte';
+	import type { GameRoomWithDetails } from '$lib/types/game';
 
 	const user = await getCurrentUser();
 
@@ -32,40 +33,29 @@
 		}
 	});
 
-	const connectedEvent = connection.select('connected');
-	const roomUpdated = connection.select('room:updated');
-	const playerReady = connection.select('player:ready');
-	const gameStarted = connection.select('game:started');
-	const chatMessage = connection.select('chat:message');
-	
-	// Réagir aux événements SSE
-	$effect(() => {
-		if ($connectedEvent) {
-			console.log('✅ SSE Connected:', $connectedEvent);
-		}
-	});
+	const initialRoomState = $derived(await getRoom(roomId));
 
-	$effect(() => {
-		if ($roomUpdated || $playerReady || $gameStarted) {
-			console.log('🔄 Room update, refreshing...');
-			getRoom(roomId).refresh();
-		}
-	});
+	const roomUpdated = connection.select('room:updated');
+	const chatMessage = connection.select('chat:message');
+
+	const room = $derived(
+		$roomUpdated ? (JSON.parse($roomUpdated) as GameRoomWithDetails) : initialRoomState
+	);
 </script>
 
 <div class="grid gap-6 lg:grid-cols-12">
 	<div class="lg:col-span-8">
 		<Card.Root>
 			<Card.Content>
-				<RoomHeader {roomId} />
-				<RoomInfo {roomId} />
-				<RoomActions {roomId} />
+				<RoomHeader {room} />
+				<RoomInfo {room} />
+				<RoomActions {room} />
 			</Card.Content>
 		</Card.Root>
 	</div>
 
 	<div class="lg:col-span-4">
-		<PlayerList {roomId} />
-		<ChatPanel {roomId} {chatMessage} />
+		<PlayerList {room} />
+		<ChatPanel {room} {chatMessage} />
 	</div>
 </div>

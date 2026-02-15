@@ -132,10 +132,7 @@ export async function listPublicRooms(): Promise<GameRoomWithDetails[]> {
 /**
  * Rejoindre une room (par ID ou par code)
  */
-export async function joinRoom(
-	userId: string,
-	roomIdOrCode: string
-): Promise<GameRoomWithDetails> {
+export async function joinRoom(userId: string, roomIdOrCode: string): Promise<GameRoomWithDetails> {
 	// Chercher par ID ou par code
 	const room = await db.query.gameRoom.findFirst({
 		where: sql`${gameRoom.id} = ${roomIdOrCode} OR ${gameRoom.code} = ${roomIdOrCode}`,
@@ -164,11 +161,12 @@ export async function joinRoom(
 		userId,
 		isReady: false
 	});
-
+	
+	const updatedRoom = await getRoomById(room.id);
 	// Broadcaster l'événement
-	broadcastToRoom(room.id, 'room:updated', { action: 'player_joined', userId });
+	broadcastToRoom(room.id, 'room:updated', { ...updatedRoom });
 
-	return getRoomById(room.id);
+	return updatedRoom;
 }
 
 /**
@@ -189,7 +187,7 @@ export async function leaveRoom(userId: string, roomId: string): Promise<void> {
 		.where(and(eq(roomParticipant.roomId, roomId), eq(roomParticipant.userId, userId)));
 
 	// Broadcaster l'événement
-	broadcastToRoom(roomId, 'room:updated', { action: 'player_left', userId });
+	broadcastToRoom(roomId, 'room:updated', { ...room });
 }
 
 /**
@@ -211,8 +209,9 @@ export async function togglePlayerReady(userId: string, roomId: string): Promise
 		.set({ isReady: newReadyState })
 		.where(and(eq(roomParticipant.roomId, roomId), eq(roomParticipant.userId, userId)));
 
+	const room = await getRoomById(roomId);
 	// Broadcaster l'événement
-	broadcastToRoom(roomId, 'player:ready', { userId, isReady: newReadyState });
+	broadcastToRoom(roomId, 'room:updated', { ...room });
 
 	return newReadyState;
 }
@@ -242,7 +241,7 @@ export async function startGame(userId: string, roomId: string): Promise<void> {
 	await db.update(gameRoom).set({ status: 'playing' }).where(eq(gameRoom.id, roomId));
 
 	// Broadcaster l'événement
-	broadcastToRoom(roomId, 'game:started', { roomId });
+	broadcastToRoom(roomId, 'room:updated', { ...room });
 }
 
 /**

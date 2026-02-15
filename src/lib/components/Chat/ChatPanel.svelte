@@ -6,29 +6,28 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { untrack } from 'svelte';
 	import type { Readable } from 'svelte/store';
-	import type { ChatMessageWithUser } from '$lib/types/game';
+	import type { ChatMessageWithUser, GameRoomWithDetails } from '$lib/types/game';
 
 	interface Props {
-		roomId: string;
+		room: GameRoomWithDetails;
 		chatMessage: Readable<string>;
 	}
 
-	let { roomId, chatMessage }: Props = $props();
-
-	const [user, room, chatHistory] = $derived(
-		await Promise.all([getCurrentUser(), getRoom(roomId), getChatHistory(roomId)])
+	let { room, chatMessage }: Props = $props();
+	const [user, chatHistory] = $derived(
+		await Promise.all([getCurrentUser(), getChatHistory(room.id)])
 	);
-	
+
 	// Messages reçus via SSE
 	let receivedMessages = $state<ChatMessageWithUser[]>([]);
-	
+
 	// Combiner l'historique et les messages SSE, triés par date
 	const chatMessages = $derived(
 		[...chatHistory, ...receivedMessages].sort(
 			(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
 		)
 	);
-	
+
 	const isParticipant = $derived(user && room.participants.some((p) => p.userId === user.id));
 
 	// Ajouter les nouveaux messages SSE
@@ -54,7 +53,7 @@
 		e.preventDefault();
 		if (!messageText.trim()) return;
 
-		await sendMessage({ roomId, message: messageText.trim() });
+		await sendMessage({ roomId: room.id, message: messageText.trim() });
 		messageText = '';
 	}
 </script>

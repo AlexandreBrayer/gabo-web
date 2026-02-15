@@ -1,13 +1,10 @@
 <script lang="ts">
-	import { getRoom } from '$routes/rooms/rooms.remote';
-
+	import type { GameRoomWithDetails } from '$lib/types/game';
 	interface Props {
-		roomId: string;
+		room: GameRoomWithDetails;
 	}
 
-	let { roomId }: Props = $props();
-
-	const room = $derived(await getRoom(roomId));
+	let { room }: Props = $props();
 </script>
 
 <div class="mb-6 rounded-lg border-1 bg-muted/50 p-6">
