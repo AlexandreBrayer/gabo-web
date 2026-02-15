@@ -41,53 +41,6 @@ export const getChatHistory = query(v.string(), async (roomId) => {
 });
 
 /**
- * Récupérer les rooms de l'utilisateur connecté
- */
-export const getMyRooms = query(async () => {
-	const { locals } = getRequestEvent();
-	const userId = locals.user?.id;
-
-	if (!userId) {
-		throw error(401, 'Unauthorized');
-	}
-
-	const { db } = await import('$lib/server/db');
-	const { roomParticipant } = await import('$lib/server/db/schema');
-	const { eq } = await import('drizzle-orm');
-
-	const rooms = await db.query.gameRoom.findMany({
-		where: eq(roomParticipant.userId, userId),
-		with: {
-			owner: {
-				columns: {
-					id: true,
-					name: true,
-					email: true,
-					image: true
-				}
-			},
-			participants: {
-				with: {
-					user: {
-						columns: {
-							id: true,
-							name: true,
-							email: true,
-							image: true
-						}
-					}
-				}
-			}
-		}
-	});
-
-	return rooms.map((room) => ({
-		...room,
-		participantCount: room.participants.length
-	}));
-});
-
-/**
  * Créer une nouvelle game room
  */
 export const createRoom = form(
@@ -177,6 +130,7 @@ export const startGame = command(v.string(), async (roomId) => {
 
 /**
  * Envoyer un message dans le chat
+ * todo passer en form, command fait le taff pour le moment
  */
 export const sendMessage = command(
 	v.object({
@@ -191,11 +145,6 @@ export const sendMessage = command(
 			throw error(401, 'Unauthorized');
 		}
 
-		const chatMessage = await sendChatMessage(userId, data.roomId, data.message);
-
-		// Rafraîchir l'historique du chat
-		await getChatHistory(data.roomId).refresh();
-
-		return chatMessage;
+		await sendChatMessage(userId, data.roomId, data.message);
 	}
 );
