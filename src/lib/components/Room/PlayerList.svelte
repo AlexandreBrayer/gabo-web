@@ -1,11 +1,14 @@
 <script lang="ts">
+	import { getRoom } from '$routes/rooms/rooms.remote';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import type { GameRoomWithDetails } from '$lib/types/game';
+
 	interface Props {
-		room: GameRoomWithDetails;
+		roomId: string;
 	}
 
-	let { room }: Props = $props();
+	let { roomId }: Props = $props();
+
+	const room = $derived(await getRoom(roomId));
 </script>
 
 <Card.Root>

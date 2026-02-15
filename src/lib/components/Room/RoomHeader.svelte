@@ -1,11 +1,13 @@
 <script lang="ts">
-	import type { GameRoomWithDetails } from '$lib/types/game';
+	import { getRoom } from '$routes/rooms/rooms.remote';
 	import RoomStatusBadge from './RoomStatusBadge.svelte';
 	interface Props {
-		room: GameRoomWithDetails;
+		roomId: string;
 	}
 
-	let { room }: Props = $props();
+	let { roomId }: Props = $props();
+
+	const room = $derived(await getRoom(roomId));
 </script>
 
 <div class="mb-6 flex items-start justify-between">

@@ -24,6 +24,8 @@
 		redirect(307, '/');
 	}
 
+	const roomQuery = getRoom(roomId);
+	const room = $derived(await roomQuery);
 	// Connexion SSE unique pour toute la page
 	const connection = source(`/rooms/${roomId}/events`, {
 		options: {
@@ -33,29 +35,31 @@
 		}
 	});
 
-	const initialRoomState = $derived(await getRoom(roomId));
-
 	const roomUpdated = connection.select('room:updated');
 	const chatMessage = connection.select('chat:message');
 
-	const room = $derived(
-		$roomUpdated ? (JSON.parse($roomUpdated) as GameRoomWithDetails) : initialRoomState
-	);
+	// Met à jour le cache de la query quand le SSE envoie une update
+	$effect(() => {
+		if ($roomUpdated) {
+			const newRoomData = JSON.parse($roomUpdated) as GameRoomWithDetails;
+			roomQuery.set(newRoomData);
+		}
+	});
 </script>
 
 <div class="grid gap-6 lg:grid-cols-12">
 	<div class="lg:col-span-8">
 		<Card.Root>
 			<Card.Content>
-				<RoomHeader {room} />
-				<RoomInfo {room} />
-				<RoomActions {room} />
+				<RoomHeader {roomId} />
+				<RoomInfo {roomId} />
+				<RoomActions {roomId} />
 			</Card.Content>
 		</Card.Root>
 	</div>
 
 	<div class="lg:col-span-4">
-		<PlayerList {room} />
-		<ChatPanel {room} {chatMessage} />
+		<PlayerList {roomId} />
+		<ChatPanel {roomId} {chatMessage} />
 	</div>
 </div>

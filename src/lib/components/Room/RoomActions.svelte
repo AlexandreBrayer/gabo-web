@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { joinRoom, leaveRoom, toggleReady } from '$routes/rooms/rooms.remote';
+	import { getRoom, joinRoom, leaveRoom, toggleReady } from '$routes/rooms/rooms.remote';
 	import { getCurrentUser } from '$routes/auth.remote';
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
-	import type { GameRoomWithDetails } from '$lib/types/game';
+	
 	interface Props {
-		room: GameRoomWithDetails;
+		roomId: string;
 	}
 
-	let { room }: Props = $props();
+	let { roomId }: Props = $props();
 
-	const user = $derived(await getCurrentUser());
+	const [user, room] = $derived(await Promise.all([getCurrentUser(), getRoom(roomId)]));
 	const isOwner = $derived(user && room.ownerId === user.id);
 	const isParticipant = $derived(user && room.participants.some((p) => p.userId === user.id));
 	const currentParticipant = $derived(
@@ -21,17 +21,17 @@
 	);
 
 	async function handleJoin() {
-		await joinRoom(room.id);
+		await joinRoom(roomId);
 	}
 
 	function handleLeave() {
-		leaveRoom(room.id).then(() => {
+		leaveRoom(roomId).then(() => {
 			goto('/');
 		});
 	}
 
 	function handleToggleReady() {
-		toggleReady(room.id);
+		toggleReady(roomId);
 	}
 
 	function handleStart() {
