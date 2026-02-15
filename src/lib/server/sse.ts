@@ -1,12 +1,12 @@
 // Gestion des Server-Sent Events par room
 
 // Map pour stocker les émetteurs par room
-const roomEmitters = new Map<string, Set<(event: string, data: string) => any>>();
+const roomEmitters = new Map<string, Set<(event: string, data: string) => void>>();
 
 /**
  * Enregistre un émetteur pour une room
  */
-export function registerRoomEmitter(roomId: string, emit: (event: string, data: string) => any) {
+export function registerRoomEmitter(roomId: string, emit: (event: string, data: string) => void) {
 	if (!roomEmitters.has(roomId)) {
 		roomEmitters.set(roomId, new Set());
 	}
@@ -19,7 +19,7 @@ export function registerRoomEmitter(roomId: string, emit: (event: string, data: 
 /**
  * Supprime un émetteur d'une room
  */
-export function unregisterRoomEmitter(roomId: string, emit: (event: string, data: string) => any) {
+export function unregisterRoomEmitter(roomId: string, emit: (event: string, data: string) => void) {
 	const emitters = roomEmitters.get(roomId);
 	if (!emitters) return;
 	
@@ -34,7 +34,7 @@ export function unregisterRoomEmitter(roomId: string, emit: (event: string, data
 /**
  * Broadcaster un événement à tous les clients d'une room
  */
-export function broadcastToRoom(roomId: string, event: string, data: any) {
+export function broadcastToRoom(roomId: string, event: string, data: unknown) {
 	const emitters = roomEmitters.get(roomId);
 	if (!emitters || emitters.size === 0) {
 		console.log(`No emitters for room ${roomId}, skipping broadcast`);
@@ -45,8 +45,9 @@ export function broadcastToRoom(roomId: string, event: string, data: any) {
 	console.log(`Broadcasting ${event} to ${emitters.size} clients in room ${roomId}`);
 	
 	for (const emit of emitters) {
-		const { error } = emit(event, payload);
-		if (error) {
+		try {
+			emit(event, payload);
+		} catch (error) {
 			console.error('Error broadcasting event:', error);
 		}
 	}
