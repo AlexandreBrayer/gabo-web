@@ -11,6 +11,7 @@
 	import PlayerList from '$lib/components/Room/PlayerList.svelte';
 	import ChatPanel from '$lib/components/Chat/ChatPanel.svelte';
 	import type { GameRoomWithDetails } from '$lib/types/game';
+	import { SSEChannel } from '$lib/types/sse';
 
 	const user = await getCurrentUser();
 
@@ -35,8 +36,8 @@
 		}
 	});
 
-	const roomUpdated = connection.select('room:updated');
-	const chatMessage = connection.select('chat:message');
+	const roomUpdated = connection.select(SSEChannel.ROOM_UPDATED);
+	const chatMessage = connection.select(SSEChannel.CHAT_MESSAGE);
 
 	// Met à jour le cache de la query quand le SSE envoie une update
 	$effect(() => {

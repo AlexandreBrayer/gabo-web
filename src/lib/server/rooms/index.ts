@@ -1,9 +1,10 @@
-import { db } from '../db/index.js';
-import { gameRoom, roomParticipant, chatMessage } from '../db/schema.js';
+import { db } from '../db/index';
+import { gameRoom, roomParticipant, chatMessage } from '../db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
-import type { GameRoomWithDetails, ChatMessageWithUser } from '../../types/game.js';
+import type { GameRoomWithDetails, ChatMessageWithUser } from '../../types/game';
 import { error } from '@sveltejs/kit';
-import { broadcastToRoom } from '../sse.js';
+import { broadcastToRoom } from '../sse';
+import { SSEChannel } from '../../types/sse';
 
 /**
  * Génère un code unique pour une room privée (6 caractères alphanumériques)
@@ -161,10 +162,10 @@ export async function joinRoom(userId: string, roomIdOrCode: string): Promise<Ga
 		userId,
 		isReady: false
 	});
-	
+
 	const updatedRoom = await getRoomById(room.id);
 	// Broadcaster l'événement
-	broadcastToRoom(room.id, 'room:updated', { ...updatedRoom });
+	broadcastToRoom(room.id, SSEChannel.ROOM_UPDATED, updatedRoom);
 
 	return updatedRoom;
 }
@@ -186,8 +187,9 @@ export async function leaveRoom(userId: string, roomId: string): Promise<void> {
 		.delete(roomParticipant)
 		.where(and(eq(roomParticipant.roomId, roomId), eq(roomParticipant.userId, userId)));
 
+	const updatedRoom = await getRoomById(roomId);
 	// Broadcaster l'événement
-	broadcastToRoom(roomId, 'room:updated', { ...room });
+	broadcastToRoom(roomId, SSEChannel.ROOM_UPDATED, updatedRoom);
 }
 
 /**
@@ -211,7 +213,7 @@ export async function togglePlayerReady(userId: string, roomId: string): Promise
 
 	const room = await getRoomById(roomId);
 	// Broadcaster l'événement
-	broadcastToRoom(roomId, 'room:updated', { ...room });
+	broadcastToRoom(roomId, SSEChannel.ROOM_UPDATED, room);
 
 	return newReadyState;
 }
@@ -240,8 +242,9 @@ export async function startGame(userId: string, roomId: string): Promise<void> {
 
 	await db.update(gameRoom).set({ status: 'playing' }).where(eq(gameRoom.id, roomId));
 
+	const updatedRoom = await getRoomById(roomId);
 	// Broadcaster l'événement
-	broadcastToRoom(roomId, 'room:updated', { ...room });
+	broadcastToRoom(roomId, SSEChannel.ROOM_UPDATED, updatedRoom);
 }
 
 /**
@@ -288,7 +291,7 @@ export async function sendChatMessage(
 	}
 
 	// Broadcaster le message
-	broadcastToRoom(roomId, 'chat:message', messageWithUser);
+	broadcastToRoom(roomId, SSEChannel.CHAT_MESSAGE, messageWithUser);
 
 	return messageWithUser;
 }

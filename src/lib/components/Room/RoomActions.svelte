@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getRoom, joinRoom, leaveRoom, toggleReady } from '$routes/rooms/rooms.remote';
+	import { getRoom, joinRoom, leaveRoom, toggleReady, startGame } from '$routes/rooms/rooms.remote';
 	import { getCurrentUser } from '$routes/auth.remote';
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
@@ -35,12 +35,24 @@
 	}
 
 	function handleStart() {
-		//todo
+		startGame(roomId);
+	}
+
+	function handleEnterRoom() {
+		if (isParticipant) {
+			goto(`/play/${roomId}`);
+		} else {
+			goto(`/spectate/${roomId}`);
+		}
 	}
 </script>
 
 <div class="flex gap-3">
-	{#if !isParticipant}
+	{#if room.status === 'playing'}
+		<Button onclick={handleEnterRoom}>
+			{isParticipant ? 'Rejoindre la partie' : 'Spectateur'}
+		</Button>
+	{:else if !isParticipant}
 		{#if room.participantCount < room.maxPlayers}
 			<Button onclick={handleJoin}>Rejoindre la partie</Button>
 		{:else}

@@ -81,6 +81,84 @@ export const chatMessage = sqliteTable(
 	(table) => [index('chat_message_room_idx').on(table.roomId)]
 );
 
+// Game State
+export const gameState = sqliteTable('game_state', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	roomId: text('room_id')
+		.notNull()
+		.unique()
+		.references(() => gameRoom.id, { onDelete: 'cascade' }),
+	config: text('config', { mode: 'json' }).notNull().$type<Record<string, unknown>>(),
+	deck: text('deck', { mode: 'json' }).notNull().$type<string[]>(),
+	currentPlayerId: text('current_player_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	createdAt: integer('created_at', { mode: 'timestamp_ms' })
+		.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+		.notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+		.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+		.$onUpdate(() => new Date())
+		.notNull()
+});
+
+// Player Mat (zone de jeu du joueur)
+export const playerMat = sqliteTable(
+	'player_mat',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		roomId: text('room_id')
+			.notNull()
+			.references(() => gameRoom.id, { onDelete: 'cascade' }),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		cards: text('cards', { mode: 'json' }).notNull().$type<string[]>(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('player_mat_room_idx').on(table.roomId),
+		index('player_mat_user_idx').on(table.userId)
+	]
+);
+
+// Score (feuille de score par round)
+export const score = sqliteTable(
+	'score',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		gameStateId: text('game_state_id')
+			.notNull()
+			.references(() => gameState.id, { onDelete: 'cascade' }),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		round: integer('round').notNull(),
+		scoreType: text('score_type').notNull(), // 'gabo', 'score', 'penalite'
+		value: integer('value').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull()
+	},
+	(table) => [
+		index('score_game_state_idx').on(table.gameStateId),
+		index('score_user_idx').on(table.userId),
+		index('score_round_idx').on(table.round)
+	]
+);
+
 // Relations
 export const gameRoomRelations = relations(gameRoom, ({ one, many }) => ({
 	owner: one(user, {
@@ -88,7 +166,12 @@ export const gameRoomRelations = relations(gameRoom, ({ one, many }) => ({
 		references: [user.id]
 	}),
 	participants: many(roomParticipant),
-	messages: many(chatMessage)
+	messages: many(chatMessage),
+	gameState: one(gameState, {
+		fields: [gameRoom.id],
+		references: [gameState.roomId]
+	}),
+	playerMats: many(playerMat)
 }));
 
 export const roomParticipantRelations = relations(roomParticipant, ({ one }) => ({
@@ -109,6 +192,40 @@ export const chatMessageRelations = relations(chatMessage, ({ one }) => ({
 	}),
 	user: one(user, {
 		fields: [chatMessage.userId],
+		references: [user.id]
+	})
+}));
+
+export const gameStateRelations = relations(gameState, ({ one, many }) => ({
+	room: one(gameRoom, {
+		fields: [gameState.roomId],
+		references: [gameRoom.id]
+	}),
+	currentPlayer: one(user, {
+		fields: [gameState.currentPlayerId],
+		references: [user.id]
+	}),
+	scores: many(score)
+}));
+
+export const playerMatRelations = relations(playerMat, ({ one }) => ({
+	room: one(gameRoom, {
+		fields: [playerMat.roomId],
+		references: [gameRoom.id]
+	}),
+	user: one(user, {
+		fields: [playerMat.userId],
+		references: [user.id]
+	})
+}));
+
+export const scoreRelations = relations(score, ({ one }) => ({
+	gameState: one(gameState, {
+		fields: [score.gameStateId],
+		references: [gameState.id]
+	}),
+	user: one(user, {
+		fields: [score.userId],
 		references: [user.id]
 	})
 }));

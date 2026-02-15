@@ -1,4 +1,5 @@
 // Gestion des Server-Sent Events par room
+import { SSEChannel } from '../types/sse';
 
 // Map pour stocker les émetteurs par room
 const roomEmitters = new Map<string, Set<(event: string, data: string) => void>>();
@@ -34,7 +35,7 @@ export function unregisterRoomEmitter(roomId: string, emit: (event: string, data
 /**
  * Broadcaster un événement à tous les clients d'une room
  */
-export function broadcastToRoom(roomId: string, event: string, data: unknown) {
+export function broadcastToRoom(roomId: string, channel: SSEChannel, data: unknown) {
 	const emitters = roomEmitters.get(roomId);
 	if (!emitters || emitters.size === 0) {
 		console.log(`No emitters for room ${roomId}, skipping broadcast`);
@@ -42,11 +43,11 @@ export function broadcastToRoom(roomId: string, event: string, data: unknown) {
 	}
 
 	const payload = JSON.stringify(data);
-	console.log(`Broadcasting ${event} to ${emitters.size} clients in room ${roomId}`);
+	console.log(`Broadcasting ${channel} to ${emitters.size} clients in room ${roomId}`);
 	
 	for (const emit of emitters) {
 		try {
-			emit(event, payload);
+			emit(channel, payload);
 		} catch (error) {
 			console.error('Error broadcasting event:', error);
 		}

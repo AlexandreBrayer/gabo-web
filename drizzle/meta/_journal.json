@@ -8,6 +8,20 @@
       "when": 1771160720921,
       "tag": "0000_lonely_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1771182401424,
+      "tag": "0001_sticky_zaladane",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1771186899781,
+      "tag": "0002_special_emma_frost",
+      "breakpoints": true
     }
   ]
 }
