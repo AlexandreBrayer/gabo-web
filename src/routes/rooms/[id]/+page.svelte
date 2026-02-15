@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { getCurrentUser } from '../../auth.remote';
-	import { getRoom, getChatHistory } from '../rooms.remote';
+	import { getCurrentUser } from '$routes/auth.remote';
+	import { getRoom } from '$routes/rooms/rooms.remote';
 	import { redirect } from '@sveltejs/kit';
 	import { source } from 'sveltekit-sse';
 	import * as Card from '$lib/components/ui/card/index.js';
