@@ -12,14 +12,14 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <ModeWatcher />
 <Toaster />
-<div class="min-h-screen bg-background">
-	<header class="border-b bg-card">
-		<div class="container mx-auto flex items-center justify-between px-6 py-4">
+<div class="flex min-h-screen flex-col bg-background">
+	<header class="h-16 border-b bg-card">
+		<div class="container mx-auto flex h-full items-center justify-between px-6">
 			<a href="/" class="flex items-center gap-2">
 				<h1 class="text-2xl font-bold text-foreground">Gabo</h1>
 			</a>
 			<ToggleButton />
 		</div>
 	</header>
-	<main class="container mx-auto px-6 py-6">{@render children()}</main>
+	<main class="flex-1 container mx-auto px-6 py-6">{@render children()}</main>
 </div>

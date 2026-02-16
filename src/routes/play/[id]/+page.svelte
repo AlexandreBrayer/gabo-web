@@ -8,6 +8,7 @@
 	import { SSEChannel } from '$lib/types/sse';
 	import { goto } from '$app/navigation';
 	import { getGameState } from '$routes/game/gameHandlers.remote';
+	import GameBoard from '$lib/components/Game/GameBoard.svelte';
 
 	const user = await getCurrentUser();
 
@@ -76,6 +77,16 @@
 		}
 	}
 </script>
+
+<div class="h-[calc(100vh-112px)]">
+	<GameBoard
+		currentUserId={user.id}
+		activePlayerId={gameState.game.currentPlayerId}
+		mats={gameState.mats}
+		deckCount={gameState.game.deck.length}
+		pile={gameState.game.pile}
+	/>
+</div>
 
 {#if isOwner}
 	<button

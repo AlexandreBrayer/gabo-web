@@ -219,6 +219,6 @@ export async function getAnonymizedFullGameState(roomId: string) {
 		...mat,
 		cards: mat.cards.map(() => 'unknown' as PlayableCard)
 	}));
-	const anonyMizedDeck = game.deck.map(() => 'unknown' as PlayableCard);
-	return { game: { ...game, deck: anonyMizedDeck }, mats: anonymizedMats };
+	const anonymizedDeck = game.deck.map(() => 'unknown' as PlayableCard);
+	return { game: { ...game, deck: anonymizedDeck }, mats: anonymizedMats };
 }

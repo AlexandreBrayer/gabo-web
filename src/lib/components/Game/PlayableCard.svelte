@@ -8,9 +8,29 @@
 	interface Props {
 		card: PlayableCard;
 		size?: 'sm' | 'md' | 'lg';
+		style?: string;
 	}
 
-	let { card, size = 'md' }: Props = $props();
+	let { card, size = 'md', style = '' }: Props = $props();
+
+	// Tailles des cartes
+	// const sizes = {
+	// 	sm: 'w-16 h-24',
+	// 	md: 'w-20 h-28',
+	// 	lg: 'w-24 h-36'
+	// };
+
+	// const valueSizes = {
+	// 	sm: 'text-2xl',
+	// 	md: 'text-3xl',
+	// 	lg: 'text-4xl'
+	// };
+
+	// const iconSizes = {
+	// 	sm: 12,
+	// 	md: 16,
+	// 	lg: 18
+	// };
 
 	// Tailles des cartes
 	const sizes = {
@@ -63,6 +83,7 @@
 		class="flex items-center justify-center rounded-lg border-2 border-gray-800 bg-gradient-to-br from-gray-900 to-gray-600 shadow-lg {sizes[
 			size
 		]}"
+		{style}
 	>
 		<span class="{valueSizes[size]} font-bold text-white">G</span>
 	</div>
@@ -70,6 +91,7 @@
 	<!-- Face de carte -->
 	<div
 		class="flex flex-col rounded-lg border-2 border-gray-300 bg-white p-2 shadow-lg {sizes[size]}"
+		{style}
 	>
 		<!-- Coin haut gauche -->
 		<div class="w-4 flex flex-col items-center gap-0.5 {suitColor}">
