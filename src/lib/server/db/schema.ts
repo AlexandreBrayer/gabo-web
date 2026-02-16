@@ -1,7 +1,7 @@
 import { integer, sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
 import { relations, sql } from 'drizzle-orm';
 import { user } from './auth.schema';
-import { GameStatus } from '$lib/types/game';
+import { GameStatus, type Card } from '../../types/game';
 
 export const task = sqliteTable('task', {
 	id: text('id')
@@ -93,7 +93,8 @@ export const gameState = sqliteTable('game_state', {
 		.references(() => gameRoom.id, { onDelete: 'cascade' }),
 	status: text('status').notNull().default(GameStatus.STARTING), // starting, draw_phase, action_phase, gabo, finished
 	config: text('config', { mode: 'json' }).notNull().$type<Record<string, unknown>>(),
-	deck: text('deck', { mode: 'json' }).notNull().$type<string[]>(),
+	deck: text('deck', { mode: 'json' }).notNull().$type<Card[]>(),
+	pile: text('pile', { mode: 'json' }).notNull().$type<Card[]>(),
 	currentPlayerId: text('current_player_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),

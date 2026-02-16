@@ -3,43 +3,51 @@ import { gameState, playerMat, roomParticipant } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { GameStatus } from '$lib/types/game';
+import type { PlayableCard, Card, GameConfig } from '$lib/types/game';
+
+const defaultGameConfig: GameConfig = {
+	maxScore: 120,
+	smallPenalty: 25,
+	bigPenalty: 50,
+	scoreFallbacks: [[100, 50], [50, 25]]
+};
 /**
  * Initialise le deck de cartes pour une partie
  */
-function initializeDeck(): string[] {
-	const deck: string[] = [];
-	const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
-	const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-	
+function initializeDeck(): Card[] {
+	const deck: Card[] = [];
+	const suits = ['hearts', 'diamonds', 'clubs', 'spades'] as const;
+	const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'] as const;
+
 	// Créer un deck de 52 cartes (13 valeurs × 4 couleurs)
 	for (const suit of suits) {
 		for (const value of values) {
 			deck.push(`${suit}-${value}`);
 		}
 	}
-	
+
 	// Mélanger le deck
 	for (let i = deck.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * (i + 1));
 		[deck[i], deck[j]] = [deck[j], deck[i]];
 	}
-	
+
 	return deck;
 }
 
 /**
  * Distribue les cartes initiales aux joueurs
  */
-function dealCards(deck: string[], playerCount: number): { deck: string[], playerCards: string[][] } {
-	const playerCards: string[][] = [];
+function dealCards(deck: Card[], playerCount: number): { deck: Card[]; playerCards: Card[][] } {
+	const playerCards: Card[][] = [];
 	const updatedDeck = [...deck];
-	
+
 	// Chaque joueur reçoit 4 cartes
 	for (let i = 0; i < playerCount; i++) {
 		const cards = updatedDeck.splice(0, 4);
 		playerCards.push(cards);
 	}
-	
+
 	return { deck: updatedDeck, playerCards };
 }
 
@@ -64,7 +72,7 @@ export async function createGame(roomId: string): Promise<void> {
 
 	// Initialiser le deck
 	const deck = initializeDeck();
-	
+
 	// Distribuer les cartes
 	const { deck: remainingDeck, playerCards } = dealCards(deck, participants.length);
 
@@ -72,11 +80,7 @@ export async function createGame(roomId: string): Promise<void> {
 	const firstPlayerId = participants[0].userId;
 
 	// Configuration par défaut du jeu
-	const config = {
-		maxScore: 100,
-		round: 1,
-		discardPile: [] as string[]
-	};
+	const config = { ...defaultGameConfig };
 
 	// Créer le game state
 	await db.insert(gameState).values({
@@ -84,8 +88,9 @@ export async function createGame(roomId: string): Promise<void> {
 		status: GameStatus.STARTING,
 		config,
 		deck: remainingDeck,
+		pile: [],
 		currentPlayerId: firstPlayerId
-	})
+	});
 
 	// Créer les player mats pour chaque joueur
 	for (let i = 0; i < participants.length; i++) {
@@ -168,8 +173,52 @@ export async function getPlayerMat(roomId: string, userId: string) {
 
 /**
  * Supprime une partie et toutes ses données associées
+ * todo a supprimer que pour le dev
  */
 export async function deleteGame(roomId: string): Promise<void> {
 	// La suppression cascade sur playerMat et score grâce aux foreign keys
 	await db.delete(gameState).where(eq(gameState.roomId, roomId));
+}
+
+export async function setGameStatus(roomId: string, status: GameStatus): Promise<void> {
+	await db.update(gameState).set({ status }).where(eq(gameState.roomId, roomId));
+}
+
+export async function getTwoFirstCardsInMat(roomId: string, userId: string): Promise<string[]> {
+	const game = await db.query.gameState.findFirst({
+		where: eq(gameState.roomId, roomId)
+	});
+
+	if (!game) {
+		throw error(404, 'Game not found');
+	}
+
+	if (game.status !== GameStatus.STARTING) {
+		throw error(400, 'Game is not in starting status');
+	}
+	const mat = await db.query.playerMat.findFirst({
+		where: eq(playerMat.roomId, roomId) && eq(playerMat.userId, userId)
+	});
+
+	if (!mat) {
+		throw error(404, 'Player mat not found');
+	}
+
+	return mat.cards.slice(0, 2);
+}
+
+export async function getFullGameState(roomId: string) {
+	const [game, mats] = await Promise.all([getGameState(roomId), getPlayerMats(roomId)]);
+	return { game, mats };
+}
+
+export async function getAnonymizedFullGameState(roomId: string) {
+	const [game, mats] = await Promise.all([getGameState(roomId), getPlayerMats(roomId)]);
+	// ano toutes les cartes meme celle du joueur courant
+	const anonymizedMats = mats.map((mat) => ({
+		...mat,
+		cards: mat.cards.map(() => 'unknown' as PlayableCard)
+	}));
+	const anonyMizedDeck = game.deck.map(() => 'unknown' as PlayableCard);
+	return { game: { ...game, deck: anonyMizedDeck }, mats: anonymizedMats };
 }

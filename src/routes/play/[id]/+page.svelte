@@ -7,6 +7,7 @@
 	import type { GameRoomWithDetails } from '$lib/types/room';
 	import { SSEChannel } from '$lib/types/sse';
 	import { goto } from '$app/navigation';
+	import { getGameState } from '$routes/game/gameHandlers.remote';
 
 	const user = await getCurrentUser();
 
@@ -55,6 +56,11 @@
 		}
 	});
 
+	const gameStateQuery = getGameState(roomId);
+	const gameState = $derived(await gameStateQuery);
+
+	$inspect(gameState);
+
 	// Fonction pour supprimer la room
 	async function handleDeleteRoom() {
 		if (!confirm('Êtes-vous sûr de vouloir supprimer la room ?')) {
@@ -71,16 +77,10 @@
 	}
 </script>
 
-<div class="text-center">
-	<h1 class="text-4xl font-bold">Mode Joueur</h1>
-	<p class="mt-4 text-gray-500">Room: {room.name}</p>
-	<p class="text-sm text-gray-400">Status: {room.status}</p>
-</div>
-
 {#if isOwner}
 	<button
 		onclick={handleDeleteRoom}
-		class="fixed bottom-8 right-8 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-colors"
+		class="fixed right-8 bottom-8 rounded-full bg-red-600 px-6 py-3 font-bold text-white shadow-lg transition-colors hover:bg-red-700"
 	>
 		🗑️ Supprimer la room
 	</button>
