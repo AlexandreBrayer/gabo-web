@@ -10,14 +10,6 @@
 
 	let { room }: Props = $props();
 
-	const statusLabel = $derived(
-		room.status === 'waiting'
-			? 'En attente'
-			: room.status === 'playing'
-				? 'En cours'
-				: 'Terminée'
-	);
-
 	const isFull = $derived(room.participantCount >= room.maxPlayers);
 </script>
 

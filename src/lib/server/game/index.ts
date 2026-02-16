@@ -2,7 +2,7 @@ import { db } from '../db/index';
 import { gameState, playerMat, roomParticipant } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
-
+import { GameStatus } from '$lib/types/game';
 /**
  * Initialise le deck de cartes pour une partie
  */
@@ -81,7 +81,7 @@ export async function createGame(roomId: string): Promise<void> {
 	// Créer le game state
 	await db.insert(gameState).values({
 		roomId,
-		status: 'starting',
+		status: GameStatus.STARTING,
 		config,
 		deck: remainingDeck,
 		currentPlayerId: firstPlayerId
@@ -95,16 +95,6 @@ export async function createGame(roomId: string): Promise<void> {
 			cards: playerCards[i]
 		});
 	}
-}
-
-/**
- * Passe le statut de la game à "playing"
- */
-export async function startGamePlay(roomId: string): Promise<void> {
-	await db
-		.update(gameState)
-		.set({ status: 'playing' })
-		.where(eq(gameState.roomId, roomId));
 }
 
 /**
