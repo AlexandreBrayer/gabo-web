@@ -4,10 +4,14 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import ToggleButton from '$lib/components/ModeWatcher/ToggleButton.svelte';
 	let { children } = $props();
+	import { Toaster } from '$lib/components/ui/sonner/index.js';
+
 </script>
+
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <ModeWatcher />
+<Toaster />
 <div class="min-h-screen bg-background">
 	<header class="border-b bg-card">
 		<div class="container mx-auto flex items-center justify-between px-6 py-4">

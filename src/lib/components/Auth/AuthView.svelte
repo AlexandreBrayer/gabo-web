@@ -3,13 +3,6 @@
 	import RegisterForm from '$lib/components/Auth/RegisterForm.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
 
-	interface Props {
-		loginAction: any;
-		registerAction: any;
-	}
-
-	let { loginAction, registerAction }: Props = $props();
-
 	let isLogin = $state(true);
 </script>
 
@@ -22,9 +15,9 @@
 		</Card.Header>
 		<Card.Content>
 			{#if isLogin}
-				<LoginForm formAction={loginAction} />
+				<LoginForm />
 			{:else}
-				<RegisterForm formAction={registerAction} />
+				<RegisterForm />
 			{/if}
 
 			<!-- Toggle entre login et register -->

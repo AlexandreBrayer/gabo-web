@@ -1,55 +1,52 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input/index.js';
-    import { Button } from '$lib/components/ui/button/index.js';
-	interface Props {
-		formAction: any;
-	}
-
-	let { formAction }: Props = $props();
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { toast } from 'svelte-sonner';
+	import { register } from '$routes/auth.remote';
+	import { isHttpError } from '@sveltejs/kit';
 </script>
 
-<form {...formAction} class="space-y-4">
+<form
+	{...register.enhance(async ({ submit, form }) => {
+		try {
+			await submit();
+			form.reset();
+			toast.success('Inscription réussie !');
+		} catch (error) {
+			if (isHttpError(error)) {
+				toast.error(error.body.message);
+			} else {
+				toast.error("Erreur d'inscription");
+			}
+		}
+	})}
+	class="space-y-4"
+>
 	<div>
 		<label for="name" class="mb-1 block text-sm font-medium">Nom</label>
-		<Input
-			{...formAction.fields.name.as('text')}
-			id="name"
-			placeholder="Votre nom"
-		/>
-		{#each formAction.fields.name.issues() as issue}
+		<Input {...register.fields.name.as('text')} id="name" placeholder="Votre nom" autocomplete="name" />
+		{#each register.fields.name.issues() as issue}
 			<p class="mt-1 text-sm text-red-600">{issue.message}</p>
 		{/each}
 	</div>
 
 	<div>
 		<label for="email-reg" class="mb-1 block text-sm font-medium">Email</label>
-		<Input
-			{...formAction.fields.email.as('email')}
-			id="email-reg"
-			placeholder="votre@email.com"
-		/>
-		{#each formAction.fields.email.issues() as issue}
+		<Input {...register.fields.email.as('email')} id="email-reg" placeholder="votre@email.com" autocomplete="email" />
+		{#each register.fields.email.issues() as issue}
 			<p class="mt-1 text-sm text-red-600">{issue.message}</p>
 		{/each}
 	</div>
 
 	<div>
 		<label for="password-reg" class="mb-1 block text-sm font-medium">Mot de passe</label>
-		<Input
-			{...formAction.fields.password.as('password')}
-			id="password-reg"
-			placeholder="••••••••"
-		/>
-		{#each formAction.fields.password.issues() as issue}
+		<Input {...register.fields.password.as('password')} id="password-reg" placeholder="••••••••" autocomplete="new-password" />
+		{#each register.fields.password.issues() as issue}
 			<p class="mt-1 text-sm text-red-600">{issue.message}</p>
 		{/each}
 	</div>
 
-	<Button
-		type="submit"
-        class="w-full"
-		disabled={!!formAction.pending}
-	>
-		{formAction.pending ? 'Inscription...' : "S'inscrire"}
+	<Button type="submit" class="w-full" disabled={!!register.pending}>
+		{register.pending ? 'Inscription...' : "S'inscrire"}
 	</Button>
 </form>
