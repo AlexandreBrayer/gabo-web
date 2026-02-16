@@ -10,7 +10,7 @@
 	import RoomActions from '$lib/components/Room/RoomActions.svelte';
 	import PlayerList from '$lib/components/Room/PlayerList.svelte';
 	import ChatPanel from '$lib/components/Chat/ChatPanel.svelte';
-	import type { GameRoomWithDetails } from '$lib/types/game';
+	import type { GameRoomWithDetails } from '$lib/types/room';
 	import { SSEChannel } from '$lib/types/sse';
 
 	const user = await getCurrentUser();

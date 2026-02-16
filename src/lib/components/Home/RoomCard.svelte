@@ -1,6 +1,6 @@
 <script lang="ts">
 	import PlayerAvatar from './PlayerAvatar.svelte';
-	import type {GameRoomWithDetails} from '$lib/types/game';
+	import type {GameRoomWithDetails} from '$lib/types/room';
     import * as Card from '$lib/components/ui/card/index.js';
 	import RoomStatusBadge from '../Room/RoomStatusBadge.svelte';
 

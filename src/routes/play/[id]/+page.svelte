@@ -4,7 +4,7 @@
 	import { getRoom, deleteRoom } from '$routes/rooms/rooms.remote';
 	import { redirect } from '@sveltejs/kit';
 	import { source } from 'sveltekit-sse';
-	import type { GameRoomWithDetails } from '$lib/types/game';
+	import type { GameRoomWithDetails } from '$lib/types/room';
 	import { SSEChannel } from '$lib/types/sse';
 	import { goto } from '$app/navigation';
 
@@ -52,7 +52,6 @@
 		if ($gameUpdate) {
 			const gameData = JSON.parse($gameUpdate);
 			console.log('Game update:', gameData);
-			// TODO: Mettre à jour l'état du jeu
 		}
 	});
 

@@ -1,7 +1,7 @@
 import { db } from '../db/index';
 import { gameRoom, roomParticipant, chatMessage } from '../db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
-import type { GameRoomWithDetails, ChatMessageWithUser } from '../../types/game';
+import type { GameRoomWithDetails, ChatMessageWithUser } from '../../types/room';
 import { error } from '@sveltejs/kit';
 import { broadcastToRoom } from '../sse';
 import { SSEChannel } from '../../types/sse';

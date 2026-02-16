@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { GameRoomWithDetails } from '$lib/types/game';
+	import type { GameRoomWithDetails } from '$lib/types/room';
 	import { Badge } from '$lib/components/ui/badge';
 
 	let { status }: { status: GameRoomWithDetails['status'] } = $props();

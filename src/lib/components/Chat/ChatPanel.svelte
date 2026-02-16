@@ -6,7 +6,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { untrack } from 'svelte';
 	import type { Readable } from 'svelte/store';
-	import type { ChatMessageWithUser } from '$lib/types/game';
+	import type { ChatMessageWithUser } from '$lib/types/room';
 
 	interface Props {
 		roomId: string;

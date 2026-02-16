@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { getRoom } from '$routes/rooms/rooms.remote';
 	import { source } from 'sveltekit-sse';
-	import type { GameRoomWithDetails } from '$lib/types/game';
+	import type { GameRoomWithDetails } from '$lib/types/room';
 	import { SSEChannel } from '$lib/types/sse';
 
 	const roomId = page.params.id!;
