@@ -15,7 +15,8 @@ import {
 	togglePlayerReady,
 	startGame as startGameLogic,
 	sendChatMessage,
-	getChatHistory as getChatHistoryLogic
+	getChatHistory as getChatHistoryLogic,
+	deleteRoom as deleteRoomLogic
 } from '$lib/server/rooms';
 import { getRequestEvent } from '$app/server';
 
@@ -148,3 +149,17 @@ export const sendMessage = command(
 		await sendChatMessage(userId, data.roomId, data.message);
 	}
 );
+
+/**
+ * Supprimer une room (owner uniquement)
+ */
+export const deleteRoom = command(v.string(), async (roomId) => {
+	const { locals } = getRequestEvent();
+	const userId = locals.user?.id;
+
+	if (!userId) {
+		throw error(401, 'Unauthorized');
+	}
+
+	await deleteRoomLogic(userId, roomId);
+});

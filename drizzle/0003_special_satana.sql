@@ -1,0 +1,1 @@
+ALTER TABLE `game_state` ADD `status` text DEFAULT 'starting' NOT NULL;

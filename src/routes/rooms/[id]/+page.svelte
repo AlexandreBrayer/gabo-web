@@ -26,7 +26,6 @@
 	}
 
 	const roomQuery = getRoom(roomId);
-	const room = $derived(await roomQuery);
 	// Connexion SSE unique pour toute la page
 	const connection = source(`/rooms/${roomId}/events`, {
 		options: {

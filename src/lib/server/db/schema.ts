@@ -90,6 +90,7 @@ export const gameState = sqliteTable('game_state', {
 		.notNull()
 		.unique()
 		.references(() => gameRoom.id, { onDelete: 'cascade' }),
+	status: text('status').notNull().default('starting'), // starting, playing, gabo
 	config: text('config', { mode: 'json' }).notNull().$type<Record<string, unknown>>(),
 	deck: text('deck', { mode: 'json' }).notNull().$type<string[]>(),
 	currentPlayerId: text('current_player_id')

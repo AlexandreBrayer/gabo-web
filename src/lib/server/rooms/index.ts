@@ -5,6 +5,7 @@ import type { GameRoomWithDetails, ChatMessageWithUser } from '../../types/game'
 import { error } from '@sveltejs/kit';
 import { broadcastToRoom } from '../sse';
 import { SSEChannel } from '../../types/sse';
+import { createGame } from '../game/index';
 
 /**
  * Génère un code unique pour une room privée (6 caractères alphanumériques)
@@ -240,6 +241,9 @@ export async function startGame(userId: string, roomId: string): Promise<void> {
 		throw error(400, 'All players must be ready');
 	}
 
+	// Créer la game et initialiser les player mats
+	await createGame(roomId);
+
 	await db.update(gameRoom).set({ status: 'playing' }).where(eq(gameRoom.id, roomId));
 
 	const updatedRoom = await getRoomById(roomId);
@@ -317,4 +321,17 @@ export async function getChatHistory(
 		orderBy: [desc(chatMessage.createdAt)],
 		limit
 	});
+}
+
+/**
+ * Supprimer une room (tout est supprimé en cascade)
+ */
+export async function deleteRoom(userId: string, roomId: string): Promise<void> {
+	const room = await getRoomById(roomId);
+
+	if (room.ownerId !== userId) {
+		throw error(403, 'Only the room owner can delete the room');
+	}
+
+	await db.delete(gameRoom).where(eq(gameRoom.id, roomId));
 }
