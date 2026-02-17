@@ -4,7 +4,7 @@
 	import { getRoom } from '$routes/rooms/rooms.remote';
 	import { redirect } from '@sveltejs/kit';
 	import { source } from 'sveltekit-sse';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Card from '$lib/components/ui/card/index';
 	import RoomHeader from '$lib/components/Room/RoomHeader.svelte';
 	import RoomInfo from '$lib/components/Room/RoomInfo.svelte';
 	import RoomActions from '$lib/components/Room/RoomActions.svelte';

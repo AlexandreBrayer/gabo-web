@@ -4,7 +4,7 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import ToggleButton from '$lib/components/ModeWatcher/ToggleButton.svelte';
 	let { children } = $props();
-	import { Toaster } from '$lib/components/ui/sonner/index.js';
+	import { Toaster } from '$lib/components/ui/sonner/index';
 
 </script>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import RoomCard from './RoomCard.svelte';
 	import { getPublicRooms } from '$routes/rooms/rooms.remote';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '$lib/components/ui/button/index';
 	import RefreshCcw from '@lucide/svelte/icons/refresh-ccw';
 	const rooms = $derived(await getPublicRooms());
 

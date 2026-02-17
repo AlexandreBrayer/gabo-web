@@ -214,7 +214,6 @@ export async function getFullGameState(roomId: string) {
 
 export async function getAnonymizedFullGameState(roomId: string) {
 	const [game, mats] = await Promise.all([getGameState(roomId), getPlayerMats(roomId)]);
-	// ano toutes les cartes meme celle du joueur courant
 	const anonymizedMats = mats.map((mat) => ({
 		...mat,
 		cards: mat.cards.map(() => 'unknown' as PlayableCard)

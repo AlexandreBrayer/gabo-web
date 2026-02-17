@@ -1,7 +1,9 @@
 <script lang="ts">
-	import PlayableCard from './PlayableCard.svelte';
 	import PlayerMat from './PlayerMat.svelte';
+	import DeckPile from './DeckPile.svelte';
 	import type { PlayableCard as PlayableCardType } from '$lib/types/game';
+	import { getGameState } from '$routes/game/gameHandlers.remote';
+	import PlayerActions from './PlayerActions.svelte';
 
 	interface PlayerMatData {
 		userId: string;
@@ -16,13 +18,18 @@
 
 	interface Props {
 		currentUserId: string;
-		activePlayerId: string;
-		mats: PlayerMatData[];
-		deckCount: number;
-		pile: PlayableCardType[];
+		roomId: string;
 	}
 
-	let { currentUserId, activePlayerId, mats, deckCount, pile }: Props = $props();
+	let { currentUserId, roomId }: Props = $props();
+
+	const gameStateQuery = $derived(getGameState(roomId));
+	const gameState = $derived(await gameStateQuery);
+
+	const mats = $derived(gameState.mats);
+	const deckCount = $derived(gameState.game.deck.length);
+	const pile = $derived(gameState.game.pile);
+	const activePlayerId = $derived(gameState.game.currentPlayerId);
 
 	/**
 	 * Réordonne les mats pour que le joueur actuel soit toujours en bas (index 0),
@@ -133,35 +140,9 @@
 	></div>
 
 	<!-- Centre : Deck + Pile -->
-	<div class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
-		<!-- Deck -->
-		{#if deckCount > 0}
-			<div class="flex flex-col items-center gap-1">
-				<PlayableCard card="unknown" size="sm" />
-				<span class="text-xs text-gray-300">{deckCount}</span>
-			</div>
-		{:else}
-			<div
-				class="flex h-36 w-24 items-center justify-center rounded-lg border-2 border-dashed border-gray-600"
-			>
-				<span class="text-xs text-gray-500">Vide</span>
-			</div>
-		{/if}
+	<DeckPile {deckCount} {topCard} />
 
-		<!-- Pile -->
-		{#if topCard}
-			<div class="flex flex-col items-center gap-1">
-				<PlayableCard card={topCard} size="sm" />
-				<span class="text-xs text-gray-300">Pile</span>
-			</div>
-		{:else}
-			<div
-				class="flex h-36 w-24 items-center justify-center rounded-lg border-2 border-dashed border-gray-600"
-			>
-				<span class="text-xs text-gray-500">Pile</span>
-			</div>
-		{/if}
-	</div>
+	<PlayerActions {roomId} />
 
 	<!-- Player Mats positionnés sur les arêtes -->
 	{#each orderedMats as mat, i}

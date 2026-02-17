@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '$lib/components/ui/button/index';
 </script>
 
 <div class="mx-auto mt-16 max-w-2xl text-center">

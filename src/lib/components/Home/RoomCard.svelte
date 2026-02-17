@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PlayerAvatar from './PlayerAvatar.svelte';
 	import type {GameRoomWithDetails} from '$lib/types/room';
-    import * as Card from '$lib/components/ui/card/index.js';
+    import * as Card from '$lib/components/ui/card/index';
 	import RoomStatusBadge from '../Room/RoomStatusBadge.svelte';
 
 	interface Props {

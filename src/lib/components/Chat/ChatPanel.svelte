@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { getCurrentUser } from '$routes/auth.remote';
 	import { getRoom, getChatHistory, sendMessage } from '$routes/rooms/rooms.remote';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Card from '$lib/components/ui/card/index';
 	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input/index.js';
+	import { Input } from '$lib/components/ui/input/index';
 	import { untrack } from 'svelte';
 	import type { Readable } from 'svelte/store';
 	import type { ChatMessageWithUser } from '$lib/types/room';

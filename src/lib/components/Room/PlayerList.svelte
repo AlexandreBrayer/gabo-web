@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getRoom } from '$routes/rooms/rooms.remote';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Card from '$lib/components/ui/card/index';
 
 	interface Props {
 		roomId: string;

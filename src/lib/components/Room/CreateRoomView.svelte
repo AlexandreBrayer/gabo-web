@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Input } from '$lib/components/ui/input/index';
+	import * as Card from '$lib/components/ui/card/index';
+	import { Button } from '$lib/components/ui/button/index';
 	import { createRoom } from '$routes/rooms/rooms.remote';
 </script>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getCurrentUser, logout } from '$routes/auth.remote';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '$lib/components/ui/button/index';
 	const user = await getCurrentUser();
 </script>
 

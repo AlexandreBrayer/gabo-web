@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Input } from '$lib/components/ui/input/index';
+	import { Button } from '$lib/components/ui/button/index';
 	import { toast } from 'svelte-sonner';
 	import { register } from '$routes/auth.remote';
 	import { isHttpError } from '@sveltejs/kit';

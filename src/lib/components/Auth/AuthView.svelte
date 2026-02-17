@@ -1,7 +1,7 @@
 <script lang="ts">
 	import LoginForm from '$lib/components/Auth/LoginForm.svelte';
 	import RegisterForm from '$lib/components/Auth/RegisterForm.svelte';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Card from '$lib/components/ui/card/index';
 
 	let isLogin = $state(true);
 </script>

@@ -24,6 +24,8 @@
 
 	const roomQuery = getRoom(roomId);
 	const room = $derived(await roomQuery);
+	const gameStateQuery = getGameState(roomId);
+	const gameState = $derived(await gameStateQuery);
 
 	// Vérifier si l'utilisateur est le owner
 	const isOwner = $derived(room.ownerId === user.id);
@@ -57,9 +59,6 @@
 		}
 	});
 
-	const gameStateQuery = getGameState(roomId);
-	const gameState = $derived(await gameStateQuery);
-
 	$inspect(gameState);
 
 	// Fonction pour supprimer la room
@@ -78,15 +77,13 @@
 	}
 </script>
 
-<div class="h-[calc(100vh-112px)]">
-	<GameBoard
-		currentUserId={user.id}
-		activePlayerId={gameState.game.currentPlayerId}
-		mats={gameState.mats}
-		deckCount={gameState.game.deck.length}
-		pile={gameState.game.pile}
-	/>
-</div>
+{#if roomId}
+	<div class="h-[calc(100vh-112px)]">
+		<GameBoard currentUserId={user.id} {roomId} />
+	</div>
+{:else}
+	<p>Room introuvable.</p>
+{/if}
 
 {#if isOwner}
 	<button
