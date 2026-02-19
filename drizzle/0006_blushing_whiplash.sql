@@ -1,0 +1,1 @@
+ALTER TABLE `player_mat` ADD `handled_card` text DEFAULT 'null';

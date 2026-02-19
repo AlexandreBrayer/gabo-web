@@ -43,6 +43,13 @@
       "when": 1771338418375,
       "tag": "0005_hesitant_ares",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1771518825892,
+      "tag": "0006_blushing_whiplash",
+      "breakpoints": true
     }
   ]
 }

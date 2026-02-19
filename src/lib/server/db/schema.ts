@@ -121,6 +121,7 @@ export const playerMat = sqliteTable(
 			.notNull()
 			.references(() => user.id, { onDelete: 'cascade' }),
 		cards: text('cards', { mode: 'json' }).notNull().$type<PlayableCard[]>(),
+		handledCard: text('handled_card').$type<PlayableCard | null>().default(null),
 		isReady: integer('is_ready', { mode: 'boolean' }).notNull().default(false),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
