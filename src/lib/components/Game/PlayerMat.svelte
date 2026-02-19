@@ -1,18 +1,21 @@
 <script lang="ts">
 	import PlayableCard from './PlayableCard.svelte';
 	import type { PlayableCard as PlayableCardType } from '$lib/types/game';
-
+	import { GameStatus } from '$lib/types/game';
 	type Edge = 'bottom' | 'left' | 'top' | 'right';
 
 	interface Props {
 		playerName: string;
 		cards: PlayableCardType[];
-		isCurrentPlayer?: boolean;
-		isActivePlayer?: boolean;
-		edge?: Edge;
+		isCurrentPlayer: boolean;
+		isActivePlayer: boolean;
+		gameStatus: GameStatus;
+		isReady: boolean;
+		edge: Edge;
 	}
 
-	let { playerName, cards, isCurrentPlayer = false, isActivePlayer = false, edge = 'bottom' }: Props = $props();
+	let { playerName, cards, isCurrentPlayer, isActivePlayer, gameStatus, isReady, edge }: Props =
+		$props();
 
 	// Layout direction selon l'edge
 	const isVertical = $derived(edge === 'left' || edge === 'right');
@@ -20,14 +23,20 @@
 		edge === 'left' ? 'rotate-90' : edge === 'right' ? '-rotate-90' : ''
 	);
 	const cardRotation = $derived(
-		edge === 'left' ? 'rotate(90deg)' : edge === 'right' ? 'rotate(-90deg)' : edge === 'top' ? 'rotate(180deg)' : ''
+		edge === 'left'
+			? 'rotate(90deg)'
+			: edge === 'right'
+				? 'rotate(-90deg)'
+				: edge === 'top'
+					? 'rotate(180deg)'
+					: ''
 	);
 </script>
 
 <div class="flex items-center gap-1 {isVertical ? 'flex-row' : 'flex-col'}">
 	{#if isVertical}
 		<!-- Pour left/right: wrapper avec width fixe pour le nom tourné -->
-		<div class="w-5 flex items-center justify-center {edge === 'left' ? 'order-2' : ''}">
+		<div class="flex w-5 items-center justify-center {edge === 'left' ? 'order-2' : ''}">
 			<span
 				class="text-xs font-semibold whitespace-nowrap {nameRotation} {isActivePlayer
 					? 'text-yellow-400'
@@ -37,6 +46,9 @@
 			>
 				{playerName}
 				{#if isCurrentPlayer}(Vous){/if}
+				{#if gameStatus === GameStatus.STARTING}
+					{isReady ? ' - Prêt' : ' - En attente...'}
+				{/if}
 			</span>
 		</div>
 	{:else}
@@ -49,6 +61,9 @@
 		>
 			{playerName}
 			{#if isCurrentPlayer}(Vous){/if}
+			{#if gameStatus === GameStatus.STARTING}
+				{isReady ? ' - Prêt' : ' - En attente...'}
+			{/if}
 		</span>
 	{/if}
 
@@ -57,7 +72,7 @@
 		{#each cards as card}
 			{#if isVertical}
 				<!-- Pour left/right: conteneur avec dimensions inversées (h-24 w-36 car carte sm = w-24 h-36) -->
-				<div class="h-24 w-36 flex items-center justify-center">
+				<div class="flex h-24 w-36 items-center justify-center">
 					<PlayableCard {card} size="sm" style={cardRotation ? `transform: ${cardRotation}` : ''} />
 				</div>
 			{:else}

@@ -9,6 +9,7 @@
 	import { goto } from '$app/navigation';
 	import { getGameState } from '$routes/game/gameHandlers.remote';
 	import GameBoard from '$lib/components/Game/GameBoard.svelte';
+	import type { AnonymizedFullGameState } from '$lib/server/game';
 
 	const user = await getCurrentUser();
 
@@ -54,8 +55,8 @@
 	// Gestion des updates de jeu
 	$effect(() => {
 		if ($gameUpdate) {
-			const gameData = JSON.parse($gameUpdate);
-			console.log('Game update:', gameData);
+			const gameData = JSON.parse($gameUpdate) as AnonymizedFullGameState;
+			gameStateQuery.set(gameData);
 		}
 	});
 

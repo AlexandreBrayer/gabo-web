@@ -1,21 +1,8 @@
 <script lang="ts">
 	import PlayerMat from './PlayerMat.svelte';
 	import DeckPile from './DeckPile.svelte';
-	import type { PlayableCard as PlayableCardType } from '$lib/types/game';
 	import { getGameState } from '$routes/game/gameHandlers.remote';
 	import PlayerActions from './PlayerActions.svelte';
-
-	interface PlayerMatData {
-		userId: string;
-		cards: PlayableCardType[];
-		user: {
-			id: string;
-			name: string;
-			email: string;
-			image: string | null;
-		};
-	}
-
 	interface Props {
 		currentUserId: string;
 		roomId: string;
@@ -152,6 +139,8 @@
 				cards={mat.cards}
 				isCurrentPlayer={mat.userId === currentUserId}
 				isActivePlayer={mat.userId === activePlayerId}
+                isReady={mat.isReady}
+                gameStatus={gameState.game.status}
 				edge={matPlacements[i].edge}
 			/>
 		</div>

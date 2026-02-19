@@ -53,3 +53,7 @@ export function broadcastToRoom(roomId: string, channel: SSEChannel, data: unkno
 		}
 	}
 }
+
+export function broadcastGameUpdate(roomId: string, gameState: unknown) {
+	broadcastToRoom(roomId, SSEChannel.ROOM_GAME_UPDATE, gameState);
+}

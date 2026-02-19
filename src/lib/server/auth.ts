@@ -12,3 +12,12 @@ export const auth = betterAuth({
 	emailAndPassword: { enabled: true },
 	plugins: [sveltekitCookies(getRequestEvent)] // make sure this is the last plugin in the array
 });
+
+export const getUserFromLocals = () => {
+	const event = getRequestEvent();
+	const user = event.locals.user;
+	if (!user) {
+		throw new Error('User not authenticated');
+	}
+	return user;
+}

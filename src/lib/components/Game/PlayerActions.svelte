@@ -1,8 +1,14 @@
 <script lang="ts">
 	import * as Drawer from '$lib/components/ui/drawer/index';
-	import { Button } from '$lib/components/ui/button/index';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
-	import { getGameState } from '$routes/game/gameHandlers.remote';
+	import {
+		getGameState,
+		getTwoFirstCards,
+		setReady,
+		setNotReady
+	} from '$routes/game/gameHandlers.remote';
+	import PlayerAction from './PlayerAction.svelte';
+	import { getCurrentUser } from '$routes/auth.remote';
 
 	interface Props {
 		roomId: string;
@@ -14,6 +20,27 @@
 
 	const gameStateQuery = $derived(getGameState(roomId));
 	const gameState = $derived(await gameStateQuery);
+	const user = await getCurrentUser();
+
+	const isUserReady = $derived.by(() => {
+		const mat = gameState.mats.find((m) => m.userId === user!.id);
+		return mat ? mat.isReady : false;
+	});
+
+	async function handleShowTwoFirstCards() {
+		const newGameState = await getTwoFirstCards(roomId);
+		gameStateQuery.set(newGameState);
+		open = false;
+	}
+	function handleSetReady() {
+		setReady(roomId);
+		open = false;
+	}
+
+	function handleSetNotReady() {
+		setNotReady(roomId);
+		open = false;
+	}
 </script>
 
 <!-- Flèche qui sort du bord de l'écran -->
@@ -24,16 +51,22 @@
 	<ChevronUp class="h-6 w-6" /><span>Actions</span>
 </button>
 
-<Drawer.Root bind:open shouldScaleBackground>
+<Drawer.Root bind:open shouldScaleBackg(round>
 	<Drawer.Content class="fixed right-0 bottom-0 left-0">
-		<div class="mx-auto w-full max-w-lg">
+		<div class="mx-auto w-full">
 			<!-- Poignée de drag -->
 			<Drawer.Header>
 				<Drawer.Title>Actions du joueur</Drawer.Title>
 			</Drawer.Header>
-			<div class="flex flex-row gap-8 p-4 pb-8">
-				<Button size="lg" onclick={() => (open = false)}>Dire Gabo</Button>
-				<Button size="lg" onclick={() => (open = false)}>Dire Gabo</Button>
+			<div class="flex flex-row gap-8 p-6">
+				{#if gameState.game.status === 'starting'}
+					{#if isUserReady}
+						<PlayerAction label="Annuler prêt" onclick={handleSetNotReady} />
+					{:else}
+						<PlayerAction label="Prêt" onclick={handleSetReady} />
+					{/if}
+					<PlayerAction label="Voir mes 2 premières cartes" onclick={handleShowTwoFirstCards} />
+				{/if}
 			</div>
 		</div>
 	</Drawer.Content>

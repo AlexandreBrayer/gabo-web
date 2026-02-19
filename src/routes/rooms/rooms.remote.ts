@@ -1,8 +1,3 @@
-/**
- * Remote Functions pour la gestion des Game Rooms
- * Placées dans la hiérarchie des routes pour respecter la convention SvelteKit
- */
-
 import * as v from 'valibot';
 import { error, redirect } from '@sveltejs/kit';
 import { query, form, command } from '$app/server';
@@ -58,7 +53,6 @@ export const createRoom = form(
 			throw error(401, 'Unauthorized');
 		}
 
-		// Convertir privacy en isPublic pour la DB
 		const room = await createGameRoom(userId, {
 			name: data.name,
 			isPublic: data.privacy === 'public',

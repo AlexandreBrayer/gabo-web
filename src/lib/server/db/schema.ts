@@ -1,7 +1,7 @@
 import { integer, sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
 import { relations, sql } from 'drizzle-orm';
 import { user } from './auth.schema';
-import { GameStatus, type Card } from '../../types/game';
+import { GameStatus, type Card, type PlayableCard } from '../../types/game';
 
 export const task = sqliteTable('task', {
 	id: text('id')
@@ -91,7 +91,7 @@ export const gameState = sqliteTable('game_state', {
 		.notNull()
 		.unique()
 		.references(() => gameRoom.id, { onDelete: 'cascade' }),
-	status: text('status').notNull().default(GameStatus.STARTING), // starting, draw_phase, action_phase, gabo, finished
+	status: text('status').notNull().default(GameStatus.STARTING).$type<GameStatus>(), // starting, draw_phase, action_phase, gabo, finished
 	config: text('config', { mode: 'json' }).notNull().$type<Record<string, unknown>>(),
 	deck: text('deck', { mode: 'json' }).notNull().$type<Card[]>(),
 	pile: text('pile', { mode: 'json' }).notNull().$type<Card[]>(),
@@ -120,7 +120,8 @@ export const playerMat = sqliteTable(
 		userId: text('user_id')
 			.notNull()
 			.references(() => user.id, { onDelete: 'cascade' }),
-		cards: text('cards', { mode: 'json' }).notNull().$type<string[]>(),
+		cards: text('cards', { mode: 'json' }).notNull().$type<PlayableCard[]>(),
+		isReady: integer('is_ready', { mode: 'boolean' }).notNull().default(false),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 			.notNull(),

@@ -1,0 +1,1 @@
+ALTER TABLE `player_mat` ADD `is_ready` integer DEFAULT false NOT NULL;
