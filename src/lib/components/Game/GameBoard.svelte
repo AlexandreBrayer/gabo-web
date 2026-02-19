@@ -127,7 +127,7 @@
 	></div>
 
 	<!-- Centre : Deck + Pile -->
-	<DeckPile {deckCount} {topCard} />
+	<DeckPile {roomId} />
 
 	<PlayerActions {roomId} />
 
