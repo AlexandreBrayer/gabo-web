@@ -4,11 +4,10 @@ import { eq, and } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { GameStatus } from '$lib/types/game';
 import type { PlayableCard } from '$lib/types/game';
-import { broadcastGameUpdate } from '../sse';
 import { initializeDeck, dealCards, defaultGameConfig, anonymizeCards } from './logic';
 
 /**
- * Crée une nouvelle partie de jeu
+ * Crée une nouvelle partie de jeu dans la DB
  */
 export async function createGame(roomId: string): Promise<void> {
 	// Récupérer les participants de la room
@@ -59,7 +58,7 @@ export async function createGame(roomId: string): Promise<void> {
 }
 
 /**
- * Récupère l'état actuel du jeu
+ * Récupère l'état actuel du jeu depuis la DB
  */
 export async function getGameState(roomId: string) {
 	const game = await db.query.gameState.findFirst({
@@ -84,7 +83,7 @@ export async function getGameState(roomId: string) {
 }
 
 /**
- * Récupère les player mats de tous les joueurs
+ * Récupère les player mats de tous les joueurs depuis la DB
  */
 export async function getPlayerMats(roomId: string) {
 	return db.query.playerMat.findMany({
@@ -103,7 +102,7 @@ export async function getPlayerMats(roomId: string) {
 }
 
 /**
- * Récupère le player mat d'un joueur spécifique
+ * Récupère le player mat d'un joueur spécifique depuis la DB
  */
 export async function getPlayerMat(roomId: string, userId: string) {
 	const mat = await db.query.playerMat.findFirst({
@@ -128,19 +127,33 @@ export async function getPlayerMat(roomId: string, userId: string) {
 }
 
 /**
- * Supprime une partie et toutes ses données associées
- * todo a supprimer que pour le dev
+ * Met à jour le statut du jeu dans la DB
+ */
+export async function updateGameStatus(roomId: string, status: GameStatus): Promise<void> {
+	await db.update(gameState).set({ status }).where(eq(gameState.roomId, roomId));
+}
+
+/**
+ * Met à jour l'état ready d'un player mat dans la DB
+ */
+export async function updateMatReady(
+	roomId: string,
+	userId: string,
+	isReady: boolean
+): Promise<void> {
+	await db
+		.update(playerMat)
+		.set({ isReady })
+		.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId)));
+}
+
+/**
+ * Supprime une partie et toutes ses données associées de la DB
+ * @todo a supprimer que pour le dev
  */
 export async function deleteGame(roomId: string): Promise<void> {
 	// La suppression cascade sur playerMat et score grâce aux foreign keys
 	await db.delete(gameState).where(eq(gameState.roomId, roomId));
-}
-
-/**
- * Change le statut du jeu
- */
-export async function setGameStatus(roomId: string, status: GameStatus): Promise<void> {
-	await db.update(gameState).set({ status }).where(eq(gameState.roomId, roomId));
 }
 
 /**
@@ -191,7 +204,8 @@ export async function getAnonymizedFullGameState(roomId: string) {
 
 	const anonymizedMats = mats.map((mat) => ({
 		...mat,
-		cards: anonymizeCards(mat.cards) as PlayableCard[]
+		cards: anonymizeCards(mat.cards) as PlayableCard[],
+		handledCard: mat.handledCard ? ('unknown' as PlayableCard) : null
 	}));
 
 	const anonymizedDeck = anonymizeCards(game.deck) as PlayableCard[];
@@ -200,29 +214,3 @@ export async function getAnonymizedFullGameState(roomId: string) {
 }
 
 export type AnonymizedFullGameState = Awaited<ReturnType<typeof getAnonymizedFullGameState>>;
-
-/**
- * Marque un joueur comme prêt ou pas prêt, et broadcast l'état du jeu
- * Si tous les joueurs sont prêts, passe au statut DRAW_PHASE
- */
-export async function setMatReady(
-	roomId: string,
-	userId: string,
-	isReady: boolean
-): Promise<void> {
-	await db
-		.update(playerMat)
-		.set({ isReady })
-		.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId)));
-
-	const gameState = await getAnonymizedFullGameState(roomId);
-
-	// Si tous les joueurs sont prêts, passer à la phase de tirage
-	if (gameState.game.status === GameStatus.STARTING && gameState.mats.every((mat) => mat.isReady)) {
-		await setGameStatus(roomId, GameStatus.DRAW_PHASE);
-		const updatedGameState = await getAnonymizedFullGameState(roomId);
-		broadcastGameUpdate(roomId, updatedGameState);
-		return;
-	}
-    broadcastGameUpdate(roomId, gameState);
-}

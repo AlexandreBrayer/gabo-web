@@ -5,7 +5,7 @@ import type { GameRoomWithDetails, ChatMessageWithUser } from '../../types/room'
 import { error } from '@sveltejs/kit';
 import { broadcastToRoom } from '../sse';
 import { SSEChannel } from '../../types/sse';
-import { createGame } from '../game/index';
+import { createGame } from '../game/db';
 
 /**
  * Génère un code unique pour une room privée (6 caractères alphanumériques)

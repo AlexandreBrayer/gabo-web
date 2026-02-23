@@ -1,7 +1,8 @@
 import { query, command } from '$app/server';
 import * as v from 'valibot';
-import { getAnonymizedFullGameState, getTwoFirstCardsInMat, setMatReady } from '$lib/server/game';
+import { setMatReady } from '$lib/server/game/actions';
 import { getUserFromLocals } from '$lib/server/auth';
+import { getAnonymizedFullGameState, getTwoFirstCardsInMat } from '$lib/server/game/db';
 
 export const getGameState = query(v.string(), async (roomId) => {
 	return getAnonymizedFullGameState(roomId);
