@@ -161,11 +161,12 @@ export async function updateGamePile(
 export async function setHandledCard(
 	roomId: string,
 	userId: string,
-	card: PlayableCard
+	card: PlayableCard,
+	source: 'deck' | 'pile'
 ): Promise<void> {
 	await db
 		.update(playerMat)
-		.set({ handledCard: card })
+		.set({ handledCard: card, handledCardSource: source })
 		.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId)));
 }
 
@@ -261,7 +262,7 @@ export async function getPersonalGameState(roomId: string, userId: string) {
 	const mat = await getPlayerMat(roomId, userId);
 
 	const mats = anonymized.mats.map((m) =>
-		m.userId === userId ? { ...m, handledCard: mat.handledCard } : m
+		m.userId === userId ? { ...m, handledCard: mat.handledCard, handledCardSource: mat.handledCardSource } : m
 	);
 
 	return { ...anonymized, mats };
@@ -300,7 +301,7 @@ export async function swapHandledCardWithMat(
 
 	await Promise.all([
 		db.update(playerMat)
-			.set({ cards: newCards, handledCard: null })
+			.set({ cards: newCards, handledCard: null, handledCardSource: null })
 			.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId))),
 		db.update(gameState)
 			.set({ pile: newPile, status: GameStatus.DRAW_PHASE, currentPlayerId: nextPlayerId })
@@ -322,7 +323,7 @@ export async function discardHandledCardToPile(roomId: string, userId: string): 
 
 	await Promise.all([
 		db.update(playerMat)
-			.set({ handledCard: null })
+			.set({ handledCard: null, handledCardSource: null })
 			.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId))),
 		db.update(gameState)
 			.set({ pile: newPile, status: GameStatus.DRAW_PHASE, currentPlayerId: nextPlayerId })

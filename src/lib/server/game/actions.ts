@@ -60,7 +60,7 @@ export async function drawFromDeck(roomId: string, userId: string): Promise<void
 	const [card, ...remainingDeck] = game.deck;
 
 	await updateGameDeck(roomId, remainingDeck, GameStatus.ACTION_PHASE);
-	await setHandledCard(roomId, userId, card);
+	await setHandledCard(roomId, userId, card, 'deck');
 
 	const [updatedGameState, personalGameState] = await Promise.all([
 		getAnonymizedFullGameState(roomId),
@@ -90,7 +90,7 @@ export async function drawFromPile(roomId: string, userId: string): Promise<void
 	const newPile = game.pile.slice(0, -1);
 
 	await updateGamePile(roomId, newPile, GameStatus.ACTION_PHASE);
-	await setHandledCard(roomId, userId, card);
+	await setHandledCard(roomId, userId, card, 'pile');
 
 	const [updatedGameState, personalGameState] = await Promise.all([
 		getAnonymizedFullGameState(roomId),

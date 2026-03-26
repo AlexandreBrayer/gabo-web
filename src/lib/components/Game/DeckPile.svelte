@@ -28,7 +28,12 @@
 		const mat = gameState.mats.find((m) => m.userId === user!.id);
 		return mat?.handledCard ?? null;
 	});
+	const handledCardSource = $derived.by(() => {
+		const mat = gameState.mats.find((m) => m.userId === user!.id);
+		return mat?.handledCardSource ?? null;
+	});
 	const showHandledCard = $derived(isCurrentUserTurn && isActionPhase && handledCard !== null);
+	const canUseEffect = $derived(handledCardSource === 'deck');
 </script>
 
 <div class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
@@ -61,12 +66,14 @@
 				<PlayableCard card={handledCard!} size="sm" />
 			</div>
 			<span class="text-xs text-blue-300">En main</span>
-			<button
-				class="rounded bg-purple-600 px-2 py-1 text-xs text-white transition-colors hover:bg-purple-700"
-				onclick={() => useEffect(roomId)}
-			>
-				Utiliser l'effet
-			</button>
+			{#if canUseEffect}
+				<button
+					class="rounded bg-purple-600 px-2 py-1 text-xs text-white transition-colors hover:bg-purple-700"
+					onclick={() => useEffect(roomId)}
+				>
+					Utiliser l'effet
+				</button>
+			{/if}
 		</div>
 	{/if}
 
