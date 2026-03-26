@@ -48,7 +48,7 @@
 			<div
 				class="flex h-36 w-24 items-center justify-center rounded-lg border-2 border-dashed border-gray-600"
 			>
-				<span class="text-xs text-gray-500">Vide</span>
+				<span class="text-xs text-gray-300">Vide</span>
 			</div>
 		{/if}
 		<span class="text-xs text-gray-300">{deck.length}</span>
@@ -80,7 +80,7 @@
 			<div
 				class="flex h-36 w-24 items-center justify-center rounded-lg border-2 border-dashed border-gray-600"
 			>
-				<span class="text-xs text-gray-500">Vide</span>
+				<span class="text-xs text-gray-300">Vide</span>
 			</div>
 		{/if}
 		<span class="text-xs text-gray-300">Pile</span>
