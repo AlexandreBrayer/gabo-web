@@ -1,11 +1,16 @@
 import { query, command } from '$app/server';
 import * as v from 'valibot';
-import { setMatReady } from '$lib/server/game/actions';
+import { setMatReady, drawFromDeck, drawFromPile } from '$lib/server/game/actions';
 import { getUserFromLocals } from '$lib/server/auth';
-import { getAnonymizedFullGameState, getTwoFirstCardsInMat } from '$lib/server/game/db';
+import { getAnonymizedFullGameState, getPersonalGameState, getTwoFirstCardsInMat } from '$lib/server/game/db';
 
 export const getGameState = query(v.string(), async (roomId) => {
 	return getAnonymizedFullGameState(roomId);
+});
+
+export const getMyGameState = query(v.string(), async (roomId) => {
+	const user = getUserFromLocals();
+	return getPersonalGameState(roomId, user.id);
 });
 
 export const getTwoFirstCards = query(v.string(), async (roomId) => {
@@ -34,4 +39,14 @@ export const setReady = command(v.string(), async (roomId) => {
 export const setNotReady = command(v.string(), async (roomId) => {
 	const user = getUserFromLocals();
 	await setMatReady(roomId, user.id, false);
+});
+
+export const drawDeck = command(v.string(), async (roomId) => {
+	const user = getUserFromLocals();
+	await drawFromDeck(roomId, user.id);
+});
+
+export const drawPile = command(v.string(), async (roomId) => {
+	const user = getUserFromLocals();
+	await drawFromPile(roomId, user.id);
 });

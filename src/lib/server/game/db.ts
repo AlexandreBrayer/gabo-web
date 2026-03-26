@@ -3,7 +3,7 @@ import { gameState, playerMat, roomParticipant } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { GameStatus } from '$lib/types/game';
-import type { PlayableCard } from '$lib/types/game';
+import type { PlayableCard, Card } from '$lib/types/game';
 import { initializeDeck, dealCards, defaultGameConfig, anonymizeCards } from './logic';
 
 /**
@@ -134,6 +134,42 @@ export async function updateGameStatus(roomId: string, status: GameStatus): Prom
 }
 
 /**
+ * Met à jour le deck et le statut du jeu dans la DB
+ */
+export async function updateGameDeck(
+	roomId: string,
+	deck: Card[],
+	status: GameStatus
+): Promise<void> {
+	await db.update(gameState).set({ deck, status }).where(eq(gameState.roomId, roomId));
+}
+
+/**
+ * Met à jour la pile et le statut du jeu dans la DB
+ */
+export async function updateGamePile(
+	roomId: string,
+	pile: Card[],
+	status: GameStatus
+): Promise<void> {
+	await db.update(gameState).set({ pile, status }).where(eq(gameState.roomId, roomId));
+}
+
+/**
+ * Met à jour la carte en main d'un joueur
+ */
+export async function setHandledCard(
+	roomId: string,
+	userId: string,
+	card: PlayableCard
+): Promise<void> {
+	await db
+		.update(playerMat)
+		.set({ handledCard: card })
+		.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId)));
+}
+
+/**
  * Met à jour l'état ready d'un player mat dans la DB
  */
 export async function updateMatReady(
@@ -214,3 +250,19 @@ export async function getAnonymizedFullGameState(roomId: string) {
 }
 
 export type AnonymizedFullGameState = Awaited<ReturnType<typeof getAnonymizedFullGameState>>;
+
+/**
+ * Récupère l'état du jeu anonymisé mais révèle la handledCard de l'utilisateur concerné
+ */
+export async function getPersonalGameState(roomId: string, userId: string) {
+	const anonymized = await getAnonymizedFullGameState(roomId);
+
+	// Récupérer la vraie handledCard du joueur
+	const mat = await getPlayerMat(roomId, userId);
+
+	const mats = anonymized.mats.map((m) =>
+		m.userId === userId ? { ...m, handledCard: mat.handledCard } : m
+	);
+
+	return { ...anonymized, mats };
+}

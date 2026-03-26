@@ -1,6 +1,11 @@
 import { produce } from 'sveltekit-sse';
 import type { RequestEvent } from '@sveltejs/kit';
-import { registerRoomEmitter, unregisterRoomEmitter } from '$lib/server/sse.js';
+import {
+	registerRoomEmitter,
+	unregisterRoomEmitter,
+	registerUserEmitter,
+	unregisterUserEmitter
+} from '$lib/server/sse.js';
 
 export async function POST({ params, request }: RequestEvent) {
 	const roomId = params.id;
@@ -17,6 +22,7 @@ export async function POST({ params, request }: RequestEvent) {
 
 			// Enregistrer l'émetteur pour cette room
 			registerRoomEmitter(roomId, emit);
+			if (userId) registerUserEmitter(roomId, userId, emit);
 
 			// Envoyer un événement de connexion
 			emit('connected', JSON.stringify({ userId, roomId }));
@@ -25,6 +31,7 @@ export async function POST({ params, request }: RequestEvent) {
 			return function stop() {
 				console.log(`User ${userId} disconnected from room ${roomId} SSE`);
 				unregisterRoomEmitter(roomId, emit);
+				if (userId) unregisterUserEmitter(roomId, userId, emit);
 			};
 		},
 		{

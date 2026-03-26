@@ -7,7 +7,7 @@
 	import type { GameRoomWithDetails } from '$lib/types/room';
 	import { SSEChannel } from '$lib/types/sse';
 	import { goto } from '$app/navigation';
-	import { getGameState } from '$routes/game/gameHandlers.remote';
+	import { getGameState, getMyGameState } from '$routes/game/gameHandlers.remote';
 	import GameBoard from '$lib/components/Game/GameBoard.svelte';
 	import type { AnonymizedFullGameState } from '$lib/server/game';
 
@@ -25,7 +25,7 @@
 
 	const roomQuery = getRoom(roomId);
 	const room = $derived(await roomQuery);
-	const gameStateQuery = getGameState(roomId);
+	const gameStateQuery = getMyGameState(roomId);
 	const gameState = $derived(await gameStateQuery);
 
 	// Vérifier si l'utilisateur est le owner
@@ -43,6 +43,7 @@
 	const roomUpdated = connection.select(SSEChannel.ROOM_UPDATED);
 	const chatMessage = connection.select(SSEChannel.CHAT_MESSAGE);
 	const gameUpdate = connection.select(SSEChannel.ROOM_GAME_UPDATE);
+	const personalGameUpdate = connection.select(SSEChannel.PERSONAL_GAME_UPDATE);
 
 	// Met à jour le cache de la room quand le SSE envoie une update
 	$effect(() => {
@@ -56,6 +57,14 @@
 	$effect(() => {
 		if ($gameUpdate) {
 			const gameData = JSON.parse($gameUpdate) as AnonymizedFullGameState;
+			gameStateQuery.set(gameData);
+		}
+	});
+
+	// Mise à jour personnelle : révèle la handledCard du joueur courant
+	$effect(() => {
+		if ($personalGameUpdate) {
+			const gameData = JSON.parse($personalGameUpdate) as AnonymizedFullGameState;
 			gameStateQuery.set(gameData);
 		}
 	});

@@ -14,8 +14,6 @@
 	const gameState = $derived(await gameStateQuery);
 
 	const mats = $derived(gameState.mats);
-	const deckCount = $derived(gameState.game.deck.length);
-	const pile = $derived(gameState.game.pile);
 	const activePlayerId = $derived(gameState.game.currentPlayerId);
 
 	/**
@@ -27,8 +25,6 @@
 		if (currentIndex === -1) return mats;
 		return [...mats.slice(currentIndex), ...mats.slice(0, currentIndex)];
 	});
-
-	const topCard = $derived(pile.length > 0 ? pile[pile.length - 1] : null);
 
 	/**
 	 * Edges : bottom, left, top, right
@@ -132,7 +128,7 @@
 	<PlayerActions {roomId} />
 
 	<!-- Player Mats positionnés sur les arêtes -->
-	{#each orderedMats as mat, i}
+	{#each orderedMats as mat, i (mat.userId)}
 		<div class="absolute {matPlacements[i].position}">
 			<PlayerMat
 				playerName={mat.user.name}
