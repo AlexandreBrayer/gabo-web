@@ -66,6 +66,7 @@
 	},
 	"dependencies": {
 		"better-sqlite3": "^12.6.2",
+		"mdsvex": "^0.12.7",
 		"mode-watcher": "^1.1.0",
 		"sveltekit-sse": "^0.14.3",
 		"valibot": "^1.2.0"
