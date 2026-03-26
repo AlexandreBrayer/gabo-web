@@ -12,10 +12,13 @@
 		gameStatus: GameStatus;
 		isReady: boolean;
 		edge: Edge;
+		onCardSelect?: (index: number) => void;
 	}
 
-	let { playerName, cards, isCurrentPlayer, isActivePlayer, gameStatus, isReady, edge }: Props =
+	let { playerName, cards, isCurrentPlayer, isActivePlayer, gameStatus, isReady, edge, onCardSelect }: Props =
 		$props();
+
+	const canSelectCard = $derived(!!onCardSelect);
 
 	// Layout direction selon l'edge
 	const isVertical = $derived(edge === 'left' || edge === 'right');
@@ -69,12 +72,27 @@
 
 	<!-- Cartes -->
 	<div class="flex gap-1 {isVertical ? 'flex-col' : 'flex-row'} {edge === 'left' ? 'order-1' : ''}">
-		{#each cards as card}
+		{#each cards as card, i (i)}
 			{#if isVertical}
-				<!-- Pour left/right: conteneur avec dimensions inversées (h-24 w-36 car carte sm = w-24 h-36) -->
 				<div class="flex h-24 w-36 items-center justify-center">
-					<PlayableCard {card} size="sm" style={cardRotation ? `transform: ${cardRotation}` : ''} />
+					{#if canSelectCard}
+						<button
+							class="cursor-pointer rounded transition-transform hover:scale-110 hover:ring-2 hover:ring-yellow-400"
+							onclick={() => onCardSelect!(i)}
+						>
+							<PlayableCard {card} size="sm" style={cardRotation ? `transform: ${cardRotation}` : ''} />
+						</button>
+					{:else}
+						<PlayableCard {card} size="sm" style={cardRotation ? `transform: ${cardRotation}` : ''} />
+					{/if}
 				</div>
+			{:else if canSelectCard}
+				<button
+					class="cursor-pointer rounded transition-transform hover:scale-110 hover:ring-2 hover:ring-yellow-400"
+					onclick={() => onCardSelect!(i)}
+				>
+					<PlayableCard {card} size="sm" style={cardRotation ? `transform: ${cardRotation}` : ''} />
+				</button>
 			{:else}
 				<PlayableCard {card} size="sm" style={cardRotation ? `transform: ${cardRotation}` : ''} />
 			{/if}

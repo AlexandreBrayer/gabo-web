@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PlayableCard from './PlayableCard.svelte';
 	import { GameStatus } from '$lib/types/game';
-	import { getMyGameState, drawDeck, drawPile } from '$routes/game/gameHandlers.remote';
+	import { getMyGameState, drawDeck, drawPile, useEffect } from '$routes/game/gameHandlers.remote';
 	import { getCurrentUser } from '$routes/auth.remote';
 
 	interface Props {
@@ -56,11 +56,17 @@
 
 	<!-- Carte piochée -->
 	{#if showHandledCard}
-		<div class="flex flex-col items-center gap-1">
+		<div class="flex flex-col items-center gap-2">
 			<div class="rounded-lg border-2 border-blue-400 p-1">
 				<PlayableCard card={handledCard!} size="sm" />
 			</div>
 			<span class="text-xs text-blue-300">En main</span>
+			<button
+				class="rounded bg-purple-600 px-2 py-1 text-xs text-white transition-colors hover:bg-purple-700"
+				onclick={() => useEffect(roomId)}
+			>
+				Utiliser l'effet
+			</button>
 		</div>
 	{/if}
 

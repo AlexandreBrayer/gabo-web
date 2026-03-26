@@ -266,3 +266,66 @@ export async function getPersonalGameState(roomId: string, userId: string) {
 
 	return { ...anonymized, mats };
 }
+
+/**
+ * Calcule l'ID du prochain joueur dans l'ordre de jeu
+ */
+export async function getNextPlayerId(roomId: string, currentUserId: string): Promise<string> {
+	const mats = await getPlayerMats(roomId);
+	const index = mats.findIndex((m) => m.userId === currentUserId);
+	const next = mats[(index + 1) % mats.length];
+	return next.userId;
+}
+
+/**
+ * Échange la handledCard avec une carte du mat du joueur,
+ * place l'ancienne carte dans la pile, et passe au joueur suivant.
+ */
+export async function swapHandledCardWithMat(
+	roomId: string,
+	userId: string,
+	cardIndex: number
+): Promise<void> {
+	const [game, mat] = await Promise.all([getGameState(roomId), getPlayerMat(roomId, userId)]);
+
+	if (!mat.handledCard) throw error(400, 'No handled card');
+	if (cardIndex < 0 || cardIndex >= mat.cards.length) throw error(400, 'Invalid card index');
+
+	const oldCard = mat.cards[cardIndex] as import('$lib/types/game').Card;
+	const newCards = [...mat.cards];
+	newCards[cardIndex] = mat.handledCard;
+
+	const newPile = [...game.pile, oldCard];
+	const nextPlayerId = await getNextPlayerId(roomId, userId);
+
+	await Promise.all([
+		db.update(playerMat)
+			.set({ cards: newCards, handledCard: null })
+			.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId))),
+		db.update(gameState)
+			.set({ pile: newPile, status: GameStatus.DRAW_PHASE, currentPlayerId: nextPlayerId })
+			.where(eq(gameState.roomId, roomId))
+	]);
+}
+
+/**
+ * Défausse la handledCard dans la pile (après usage d'effet),
+ * et passe au joueur suivant.
+ */
+export async function discardHandledCardToPile(roomId: string, userId: string): Promise<void> {
+	const [game, mat] = await Promise.all([getGameState(roomId), getPlayerMat(roomId, userId)]);
+
+	if (!mat.handledCard) throw error(400, 'No handled card');
+
+	const newPile = [...game.pile, mat.handledCard as import('$lib/types/game').Card];
+	const nextPlayerId = await getNextPlayerId(roomId, userId);
+
+	await Promise.all([
+		db.update(playerMat)
+			.set({ handledCard: null })
+			.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId))),
+		db.update(gameState)
+			.set({ pile: newPile, status: GameStatus.DRAW_PHASE, currentPlayerId: nextPlayerId })
+			.where(eq(gameState.roomId, roomId))
+	]);
+}

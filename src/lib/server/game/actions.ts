@@ -9,6 +9,8 @@ import {
 	updateGamePile,
 	updateMatReady,
 	setHandledCard,
+	swapHandledCardWithMat,
+	discardHandledCardToPile,
 } from './db';
 import { error } from '@sveltejs/kit';
 
@@ -89,6 +91,59 @@ export async function drawFromPile(roomId: string, userId: string): Promise<void
 
 	await updateGamePile(roomId, newPile, GameStatus.ACTION_PHASE);
 	await setHandledCard(roomId, userId, card);
+
+	const [updatedGameState, personalGameState] = await Promise.all([
+		getAnonymizedFullGameState(roomId),
+		getPersonalGameState(roomId, userId)
+	]);
+	broadcastGameUpdate(roomId, updatedGameState);
+	broadcastPersonalGameUpdate(roomId, userId, personalGameState);
+}
+
+/**
+ * Échange la handledCard avec une carte du mat du joueur.
+ */
+export async function swapCardWithHand(
+	roomId: string,
+	userId: string,
+	cardIndex: number
+): Promise<void> {
+	const game = await getGameState(roomId);
+
+	if (game.status !== GameStatus.ACTION_PHASE) {
+		throw error(400, 'Not in action phase');
+	}
+	if (game.currentPlayerId !== userId) {
+		throw error(403, 'Not your turn');
+	}
+
+	await swapHandledCardWithMat(roomId, userId, cardIndex);
+
+	const [updatedGameState, personalGameState] = await Promise.all([
+		getAnonymizedFullGameState(roomId),
+		getPersonalGameState(roomId, userId)
+	]);
+	broadcastGameUpdate(roomId, updatedGameState);
+	broadcastPersonalGameUpdate(roomId, userId, personalGameState);
+}
+
+/**
+ * Utilise l'effet de la carte piochée (TODO), puis la défausse dans la pile.
+ */
+export async function useCardEffect(roomId: string, userId: string): Promise<void> {
+	const game = await getGameState(roomId);
+
+	if (game.status !== GameStatus.ACTION_PHASE) {
+		throw error(400, 'Not in action phase');
+	}
+	if (game.currentPlayerId !== userId) {
+		throw error(403, 'Not your turn');
+	}
+
+	// TODO: use action card effect
+	console.log('todo use action card');
+
+	await discardHandledCardToPile(roomId, userId);
 
 	const [updatedGameState, personalGameState] = await Promise.all([
 		getAnonymizedFullGameState(roomId),

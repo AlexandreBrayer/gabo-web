@@ -1,8 +1,9 @@
 <script lang="ts">
 	import PlayerMat from './PlayerMat.svelte';
 	import DeckPile from './DeckPile.svelte';
-	import { getGameState } from '$routes/game/gameHandlers.remote';
+	import { getMyGameState, swapCard } from '$routes/game/gameHandlers.remote';
 	import PlayerActions from './PlayerActions.svelte';
+	import { GameStatus } from '$lib/types/game';
 	interface Props {
 		currentUserId: string;
 		roomId: string;
@@ -10,11 +11,20 @@
 
 	let { currentUserId, roomId }: Props = $props();
 
-	const gameStateQuery = $derived(getGameState(roomId));
+	const gameStateQuery = $derived(getMyGameState(roomId));
 	const gameState = $derived(await gameStateQuery);
 
 	const mats = $derived(gameState.mats);
 	const activePlayerId = $derived(gameState.game.currentPlayerId);
+
+	const isMyActionPhase = $derived(
+		gameState.game.status === GameStatus.ACTION_PHASE &&
+		activePlayerId === currentUserId
+	);
+
+	function handleCardSelect(cardIndex: number) {
+		swapCard({ roomId, cardIndex });
+	}
 
 	/**
 	 * Réordonne les mats pour que le joueur actuel soit toujours en bas (index 0),
@@ -135,9 +145,10 @@
 				cards={mat.cards}
 				isCurrentPlayer={mat.userId === currentUserId}
 				isActivePlayer={mat.userId === activePlayerId}
-                isReady={mat.isReady}
-                gameStatus={gameState.game.status}
+				isReady={mat.isReady}
+				gameStatus={gameState.game.status}
 				edge={matPlacements[i].edge}
+				onCardSelect={mat.userId === currentUserId && isMyActionPhase ? handleCardSelect : undefined}
 			/>
 		</div>
 	{/each}
