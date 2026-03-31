@@ -34,7 +34,7 @@
 	});
 	const showHandledCard = $derived(isCurrentUserTurn && isActionPhase && handledCard !== null);
 	const canUseEffect = $derived(handledCardSource === 'deck');
-	const canDiscard = $derived(handledCardSource === 'pile');
+	const canDiscard = $derived(handledCardSource !== null);
 </script>
 
 <div class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
