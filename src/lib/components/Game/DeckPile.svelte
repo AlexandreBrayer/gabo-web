@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PlayableCard from './PlayableCard.svelte';
 	import { GameStatus } from '$lib/types/game';
-	import { getMyGameState, drawDeck, drawPile, useEffect } from '$routes/game/gameHandlers.remote';
+	import { getMyGameState, drawDeck, drawPile, useEffect, discardCard } from '$routes/game/gameHandlers.remote';
 	import { getCurrentUser } from '$routes/auth.remote';
 
 	interface Props {
@@ -34,6 +34,7 @@
 	});
 	const showHandledCard = $derived(isCurrentUserTurn && isActionPhase && handledCard !== null);
 	const canUseEffect = $derived(handledCardSource === 'deck');
+	const canDiscard = $derived(handledCardSource === 'pile');
 </script>
 
 <div class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">
@@ -72,6 +73,14 @@
 					onclick={() => useEffect(roomId)}
 				>
 					Utiliser l'effet
+				</button>
+			{/if}
+			{#if canDiscard}
+				<button
+					class="rounded bg-gray-600 px-2 py-1 text-xs text-white transition-colors hover:bg-gray-700"
+					onclick={() => discardCard(roomId)}
+				>
+					Défausser
 				</button>
 			{/if}
 		</div>

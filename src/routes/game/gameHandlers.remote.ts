@@ -1,6 +1,6 @@
 import { query, command } from '$app/server';
 import * as v from 'valibot';
-import { setMatReady, drawFromDeck, drawFromPile, swapCardWithHand, useCardEffect } from '$lib/server/game/actions';
+import { setMatReady, drawFromDeck, drawFromPile, swapCardWithHand, useCardEffect, discardCard as discardCardAction } from '$lib/server/game/actions';
 import { getUserFromLocals } from '$lib/server/auth';
 import { getAnonymizedFullGameState, getPersonalGameState, getTwoFirstCardsInMat } from '$lib/server/game/db';
 
@@ -59,4 +59,9 @@ export const swapCard = command(v.object({ roomId: v.string(), cardIndex: v.numb
 export const useEffect = command(v.string(), async (roomId) => {
 	const user = getUserFromLocals();
 	await useCardEffect(roomId, user.id);
+});
+
+export const discardCard = command(v.string(), async (roomId) => {
+	const user = getUserFromLocals();
+	await discardCardAction(roomId, user.id);
 });

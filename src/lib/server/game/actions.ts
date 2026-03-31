@@ -152,3 +152,26 @@ export async function useCardEffect(roomId: string, userId: string): Promise<voi
 	broadcastGameUpdate(roomId, updatedGameState);
 	broadcastPersonalGameUpdate(roomId, userId, personalGameState);
 }
+
+/**
+ * Défausse simplement la handledCard dans la pile (piochée depuis la pile).
+ */
+export async function discardCard(roomId: string, userId: string): Promise<void> {
+	const game = await getGameState(roomId);
+
+	if (game.status !== GameStatus.ACTION_PHASE) {
+		throw error(400, 'Not in action phase');
+	}
+	if (game.currentPlayerId !== userId) {
+		throw error(403, 'Not your turn');
+	}
+
+	await discardHandledCardToPile(roomId, userId);
+
+	const [updatedGameState, personalGameState] = await Promise.all([
+		getAnonymizedFullGameState(roomId),
+		getPersonalGameState(roomId, userId)
+	]);
+	broadcastGameUpdate(roomId, updatedGameState);
+	broadcastPersonalGameUpdate(roomId, userId, personalGameState);
+}
