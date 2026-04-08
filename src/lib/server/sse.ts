@@ -4,6 +4,9 @@ import { SSEChannel } from '../types/sse';
 // Map pour stocker les émetteurs par room
 const roomEmitters = new Map<string, Set<(event: string, data: string) => void>>();
 
+// Map pour stocker les émetteurs par room+user
+const userEmitters = new Map<string, Map<string, Set<(event: string, data: string) => void>>>();
+
 /**
  * Enregistre un émetteur pour une room
  */
@@ -56,4 +59,64 @@ export function broadcastToRoom(roomId: string, channel: SSEChannel, data: unkno
 
 export function broadcastGameUpdate(roomId: string, gameState: unknown) {
 	broadcastToRoom(roomId, SSEChannel.ROOM_GAME_UPDATE, gameState);
+}
+
+/**
+ * Enregistre un émetteur pour un utilisateur spécifique dans une room
+ */
+export function registerUserEmitter(
+	roomId: string,
+	userId: string,
+	emit: (event: string, data: string) => void
+) {
+	if (!userEmitters.has(roomId)) {
+		userEmitters.set(roomId, new Map());
+	}
+	const roomUsers = userEmitters.get(roomId)!;
+	if (!roomUsers.has(userId)) {
+		roomUsers.set(userId, new Set());
+	}
+	roomUsers.get(userId)!.add(emit);
+}
+
+/**
+ * Supprime un émetteur utilisateur d'une room
+ */
+export function unregisterUserEmitter(
+	roomId: string,
+	userId: string,
+	emit: (event: string, data: string) => void
+) {
+	const roomUsers = userEmitters.get(roomId);
+	if (!roomUsers) return;
+	const emitters = roomUsers.get(userId);
+	if (!emitters) return;
+	emitters.delete(emit);
+	if (emitters.size === 0) roomUsers.delete(userId);
+	if (roomUsers.size === 0) userEmitters.delete(roomId);
+}
+
+/**
+ * Broadcaster un événement à un utilisateur spécifique
+ */
+export function broadcastToUser(
+	roomId: string,
+	userId: string,
+	channel: SSEChannel,
+	data: unknown
+) {
+	const emitters = userEmitters.get(roomId)?.get(userId);
+	if (!emitters || emitters.size === 0) return;
+	const payload = JSON.stringify(data);
+	for (const emit of emitters) {
+		try {
+			emit(channel, payload);
+		} catch (err) {
+			console.error('Error broadcasting personal event:', err);
+		}
+	}
+}
+
+export function broadcastPersonalGameUpdate(roomId: string, userId: string, gameState: unknown) {
+	broadcastToUser(roomId, userId, SSEChannel.PERSONAL_GAME_UPDATE, gameState);
 }

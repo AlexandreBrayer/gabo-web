@@ -51,7 +51,7 @@
 	<ChevronUp class="h-6 w-6" /><span>Actions</span>
 </button>
 
-<Drawer.Root bind:open shouldScaleBackg(round>
+<Drawer.Root bind:open>
 	<Drawer.Content class="fixed right-0 bottom-0 left-0">
 		<div class="mx-auto w-full">
 			<!-- Poignée de drag -->

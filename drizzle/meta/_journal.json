@@ -50,6 +50,13 @@
       "when": 1771518825892,
       "tag": "0006_blushing_whiplash",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1774530187538,
+      "tag": "0007_add_handled_card_source",
+      "breakpoints": true
     }
   ]
 }

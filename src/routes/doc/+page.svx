@@ -1,0 +1,168 @@
+# Architecture du projet
+
+## Stack technique
+
+| Catégorie | Techno |
+|-----------|--------|
+| Framework | SvelteKit 2 + Svelte 5 (SSR via Node adapter) |
+| Base de données | SQLite + Drizzle ORM |
+| Auth | Better-Auth (email/password) |
+| Temps réel | Server-Sent Events via `sveltekit-sse` |
+| CSS | Tailwind CSS 4 |
+| UI | Bits UI + Lucide + Svelte Sonner |
+| Validation | Valibot |
+| Tests | Vitest + Playwright |
+| Docs | MDSvex |
+
+---
+
+## Structure des routes
+
+```
+/                    → Accueil (WelcomeView si déconnecté, Dashboard sinon)
+/login               → Connexion / Inscription
+/rooms/create        → Créer une room
+/rooms/[id]          → Lobby de la room (chat + liste joueurs)
+/play/[id]           → Plateau de jeu actif
+/spectate/[id]       → Vue spectateur
+/doc                 → Documentation (dev uniquement)
+
+POST /rooms/[id]/events  → Endpoint SSE (flux temps réel)
+```
+
+---
+
+## Base de données
+
+### Schéma de jeu (`src/lib/server/db/schema.ts`)
+
+**`gameRoom`** — Métadonnées d'une room  
+`id, name, code (privé), isPublic, maxPlayers, status, ownerId`
+
+**`roomParticipant`** — Appartenance à une room  
+`roomId, userId, isReady`
+
+**`chatMessage`** — Messages du chat  
+`roomId, userId, message, createdAt`
+
+**`gameState`** — État d'une partie  
+`roomId, status, config, deck, pile, currentPlayerId`
+
+Statuts de partie : `STARTING → DRAW_PHASE → ACTION_PHASE → GABO → FINISHED`
+
+**`playerMat`** — Zone de cartes d'un joueur  
+`roomId, userId, cards[], handledCard, handledCardSource, isReady`
+
+**`score`** — Scores par manche  
+`gameStateId, userId, round, scoreType, value`
+
+### Schéma auth (`src/lib/server/db/auth.schema.ts`)
+
+Géré par Better-Auth : `user`, `account`, `session`, `verification`
+
+---
+
+## Architecture serveur
+
+### Authentification — `src/lib/server/auth.ts`
+
+Instance Better-Auth configurée avec l'adapteur SQLite.  
+Injecte `user` et `session` dans `event.locals` via les hooks SvelteKit.
+
+```ts
+// src/app.d.ts
+interface Locals {
+  user?: User
+  session?: Session
+}
+```
+
+### Logique de jeu — `src/lib/server/game/`
+
+| Fichier | Rôle |
+|---------|------|
+| `logic.ts` | Mécanique cartes : `initializeDeck`, `dealCards`, `anonymizeCards` |
+| `db.ts` | Requêtes état de jeu : création, lecture, mises à jour |
+| `actions.ts` | Actions de tour : `drawFromDeck`, `drawFromPile`, `swapCardWithHand`, `useCardEffect` — chaque action broadcast un SSE |
+
+### Rooms — `src/lib/server/rooms/index.ts`
+
+Toutes les fonctions qui mutent l'état broadcastent automatiquement un SSE aux clients connectés.
+
+- `createGameRoom` / `deleteRoom`
+- `joinRoom(userId, roomIdOrCode)` — supporte ID ou code d'accès privé
+- `leaveRoom` — supprime la room si c'est le owner
+- `togglePlayerReady` / `areAllPlayersReady`
+- `startGame` — vérifie que tous les joueurs sont prêts
+- `sendChatMessage` / `getChatHistory`
+
+### SSE — `src/lib/server/sse.ts`
+
+Deux niveaux de diffusion :
+
+| Niveau | Utilisation |
+|--------|-------------|
+| Room (`broadcastToRoom`) | Changements de room, chat, état de jeu anonymisé |
+| User (`broadcastToUser`) | État de jeu personnalisé (révèle la handledCard du joueur) |
+
+**Canaux SSE (`src/lib/types/sse.ts`) :**
+- `ROOM_UPDATED` — membres, statut de la room
+- `CHAT_MESSAGE` — nouveau message avec infos utilisateur
+- `ROOM_GAME_UPDATE` — état de jeu complet (cartes adverses masquées)
+- `PERSONAL_GAME_UPDATE` — révèle la propre handledCard du joueur
+
+---
+
+## Remote Functions (RPC serveur)
+
+SvelteKit experimental remote functions — s'exécutent côté serveur, appelables depuis le client.
+
+### `auth.remote.ts`
+`getCurrentUser` · `login` · `register` · `logout`
+
+### `rooms.remote.ts`
+`getPublicRooms` · `getRoom` · `getChatHistory` · `createRoom` · `joinRoom` · `leaveRoom` · `toggleReady` · `startGame` · `sendMessage` · `deleteRoom`
+
+### `gameHandlers.remote.ts`
+`getGameState` · `getMyGameState` · `getTwoFirstCards` · `setReady` · `setNotReady` · `drawDeck` · `drawPile` · `swapCard` · `useEffect`
+
+---
+
+## Types principaux
+
+```ts
+// Carte
+type Card = `${CardSuit}-${CardValue}`   // ex: "hearts-A"
+type PlayableCard = Card | 'unknown'     // carte masquée = 'unknown'
+
+// Partie
+enum GameStatus { STARTING, DRAW_PHASE, ACTION_PHASE, GABO, FINISHED }
+type GameConfig = { maxScore, smallPenalty, bigPenalty, scoreFallbacks }
+```
+
+---
+
+## Flux de données type
+
+```
+Client                        Server
+  │                              │
+  ├─ Remote fn (query/command) ─► Handler
+  │                              ├─ DB read/write (Drizzle)
+  │                              └─ broadcastToRoom/User
+  │                                     │
+  │◄── SSE event ───────────────────────┘
+  │
+  └─ Update local state (Svelte stores / $state)
+```
+
+---
+
+## Composants clés
+
+| Zone | Composants |
+|------|------------|
+| Auth | `AuthView`, `LoginForm`, `RegisterForm` |
+| Home | `WelcomeView`, `DashboardHeader`, `RoomsList`, `RoomCard` |
+| Lobby | `RoomHeader`, `RoomInfo`, `RoomActions`, `PlayerList`, `ChatPanel` |
+| Jeu | `GameBoard`, `PlayerMat`, `DeckPile`, `PlayableCard`, `PlayerActions` |

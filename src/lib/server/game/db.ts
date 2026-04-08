@@ -3,7 +3,7 @@ import { gameState, playerMat, roomParticipant } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { GameStatus } from '$lib/types/game';
-import type { PlayableCard } from '$lib/types/game';
+import type { PlayableCard, Card } from '$lib/types/game';
 import { initializeDeck, dealCards, defaultGameConfig, anonymizeCards } from './logic';
 
 /**
@@ -134,6 +134,43 @@ export async function updateGameStatus(roomId: string, status: GameStatus): Prom
 }
 
 /**
+ * Met à jour le deck et le statut du jeu dans la DB
+ */
+export async function updateGameDeck(
+	roomId: string,
+	deck: Card[],
+	status: GameStatus
+): Promise<void> {
+	await db.update(gameState).set({ deck, status }).where(eq(gameState.roomId, roomId));
+}
+
+/**
+ * Met à jour la pile et le statut du jeu dans la DB
+ */
+export async function updateGamePile(
+	roomId: string,
+	pile: Card[],
+	status: GameStatus
+): Promise<void> {
+	await db.update(gameState).set({ pile, status }).where(eq(gameState.roomId, roomId));
+}
+
+/**
+ * Met à jour la carte en main d'un joueur
+ */
+export async function setHandledCard(
+	roomId: string,
+	userId: string,
+	card: PlayableCard,
+	source: 'deck' | 'pile'
+): Promise<void> {
+	await db
+		.update(playerMat)
+		.set({ handledCard: card, handledCardSource: source })
+		.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId)));
+}
+
+/**
  * Met à jour l'état ready d'un player mat dans la DB
  */
 export async function updateMatReady(
@@ -214,3 +251,82 @@ export async function getAnonymizedFullGameState(roomId: string) {
 }
 
 export type AnonymizedFullGameState = Awaited<ReturnType<typeof getAnonymizedFullGameState>>;
+
+/**
+ * Récupère l'état du jeu anonymisé mais révèle la handledCard de l'utilisateur concerné
+ */
+export async function getPersonalGameState(roomId: string, userId: string) {
+	const anonymized = await getAnonymizedFullGameState(roomId);
+
+	// Récupérer la vraie handledCard du joueur
+	const mat = await getPlayerMat(roomId, userId);
+
+	const mats = anonymized.mats.map((m) =>
+		m.userId === userId ? { ...m, handledCard: mat.handledCard, handledCardSource: mat.handledCardSource } : m
+	);
+
+	return { ...anonymized, mats };
+}
+
+/**
+ * Calcule l'ID du prochain joueur dans l'ordre de jeu
+ */
+export async function getNextPlayerId(roomId: string, currentUserId: string): Promise<string> {
+	const mats = await getPlayerMats(roomId);
+	const index = mats.findIndex((m) => m.userId === currentUserId);
+	const next = mats[(index + 1) % mats.length];
+	return next.userId;
+}
+
+/**
+ * Échange la handledCard avec une carte du mat du joueur,
+ * place l'ancienne carte dans la pile, et passe au joueur suivant.
+ */
+export async function swapHandledCardWithMat(
+	roomId: string,
+	userId: string,
+	cardIndex: number
+): Promise<void> {
+	const [game, mat] = await Promise.all([getGameState(roomId), getPlayerMat(roomId, userId)]);
+
+	if (!mat.handledCard) throw error(400, 'No handled card');
+	if (cardIndex < 0 || cardIndex >= mat.cards.length) throw error(400, 'Invalid card index');
+
+	const oldCard = mat.cards[cardIndex] as import('$lib/types/game').Card;
+	const newCards = [...mat.cards];
+	newCards[cardIndex] = mat.handledCard;
+
+	const newPile = [...game.pile, oldCard];
+	const nextPlayerId = await getNextPlayerId(roomId, userId);
+
+	await Promise.all([
+		db.update(playerMat)
+			.set({ cards: newCards, handledCard: null, handledCardSource: null })
+			.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId))),
+		db.update(gameState)
+			.set({ pile: newPile, status: GameStatus.DRAW_PHASE, currentPlayerId: nextPlayerId })
+			.where(eq(gameState.roomId, roomId))
+	]);
+}
+
+/**
+ * Défausse la handledCard dans la pile (après usage d'effet),
+ * et passe au joueur suivant.
+ */
+export async function discardHandledCardToPile(roomId: string, userId: string): Promise<void> {
+	const [game, mat] = await Promise.all([getGameState(roomId), getPlayerMat(roomId, userId)]);
+
+	if (!mat.handledCard) throw error(400, 'No handled card');
+
+	const newPile = [...game.pile, mat.handledCard as import('$lib/types/game').Card];
+	const nextPlayerId = await getNextPlayerId(roomId, userId);
+
+	await Promise.all([
+		db.update(playerMat)
+			.set({ handledCard: null, handledCardSource: null })
+			.where(and(eq(playerMat.roomId, roomId), eq(playerMat.userId, userId))),
+		db.update(gameState)
+			.set({ pile: newPile, status: GameStatus.DRAW_PHASE, currentPlayerId: nextPlayerId })
+			.where(eq(gameState.roomId, roomId))
+	]);
+}
